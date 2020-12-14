@@ -8,8 +8,8 @@ import re
 import sys
 
 
-SKIPPED_DIRS = ["Godeps", "third_party", ".git", "vendor", "examples", "testdata", "node_modules"]
-SKIPPED_FILES = ["install_golint.sh", "build.sh", "statik.go"]
+SKIPPED_DIRS = ["Godeps", "third_party", ".git", "vendor", "examples", "testdata", "node_modules", "hack"]
+SKIPPED_FILES = ["install_golint.sh", "build.sh"]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("filenames", help="list of files to check, all files if unspecified", nargs='*')

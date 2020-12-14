@@ -20,10 +20,10 @@ for gofile in $(find . -name *.go | grep -v '/vendor/'); do
         if (inImport && $0 != ")") {last=$0}
         if ($0 == ")") {inImport=0; exit}
     } END {
-        if (blankLines == 2 && index(last, "github.com/benxcorp") == 0) {exit 1}
+        if (blankLines == 2 && index(last, "github.com/DevopsArtFactory") == 0) {exit 1}
     }' "${gofile}"
     if [[ $? -ne 0 ]]; then
-        echo "${gofile} should have benxcorp imports last"
+        echo "${gofile} should have DevopsArtFactory imports last"
         EXIT_CODE=1
     fi
 done
