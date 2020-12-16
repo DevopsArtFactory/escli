@@ -5,7 +5,7 @@ RESET='\033[0m'
 
 echo "Running linters..."
 scripts=(
-    #"hack/boilerplate.sh"
+    "hack/boilerplate.sh"
     "hack/gofmt.sh"
     "hack/pedantic-imports.sh"
     "hack/golangci-lint.sh"
