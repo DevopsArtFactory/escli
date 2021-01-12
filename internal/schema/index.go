@@ -14,25 +14,8 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package cmd
+package schema
 
-import (
-	"context"
-	"io"
-
-	"github.com/spf13/cobra"
-
-	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
-	"github.com/DevopsArtFactory/escli/internal/version"
-)
-
-func NewVersionCommand() *cobra.Command {
-	return builder.NewCmd("version").
-		WithDescription("print the version information").
-		NoArgs(funcVersion)
-}
-
-// funcVersion
-func funcVersion(_ context.Context, _ io.Writer) error {
-	return version.Controller{}.Print(version.Get())
+type IndexIndexSettingsRequestBody struct {
+	Index map[string]string `json:"index"`
 }

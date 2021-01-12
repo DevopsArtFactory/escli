@@ -14,7 +14,7 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package cmd
+package snapshot
 
 import (
 	"context"
@@ -23,16 +23,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
-	"github.com/DevopsArtFactory/escli/internal/version"
+	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
-func NewVersionCommand() *cobra.Command {
-	return builder.NewCmd("version").
-		WithDescription("print the version information").
-		NoArgs(funcVersion)
+func NewSnapshotDeleteCommand() *cobra.Command {
+	return builder.NewCmd("delete").
+		WithDescription("delete snapshot for indices").
+		ExactArgs(2, funcSnapshotDelete)
 }
 
-// funcVersion
-func funcVersion(_ context.Context, _ io.Writer) error {
-	return version.Controller{}.Print(version.Get())
+func funcSnapshotDelete(ctx context.Context, out io.Writer, args []string) error {
+	return executor.RunExecutor(ctx, func(executor executor.Executor) error {
+		return executor.Runner.DeleteSnapshot(out, args)
+	})
 }

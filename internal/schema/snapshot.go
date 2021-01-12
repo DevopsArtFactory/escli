@@ -18,30 +18,61 @@ package schema
 
 import "time"
 
-type RepositorySnapshot struct {
-	ID     string `json:"id"`
-	Status string `json:"status"`
+type SnapshotSnapshotsMetadata struct {
+	SnapshotSnapshotMetadata []SnapshotSnapshotMetadata `json:"snapshots"`
 }
 
-type SnapshotMetadata struct {
-	Snapshots []struct {
-		Snapshot           string        `json:"snapshot"`
-		UUID               string        `json:"uuid"`
-		VersionID          int           `json:"version_id"`
-		Version            string        `json:"version"`
-		Indices            []string      `json:"indices"`
-		IncludeGlobalState bool          `json:"include_global_state"`
-		State              string        `json:"state"`
-		StartTime          time.Time     `json:"start_time"`
-		StartTimeInMillis  int64         `json:"start_time_in_millis"`
-		EndTime            time.Time     `json:"end_time"`
-		EndTimeInMillis    int64         `json:"end_time_in_millis"`
-		DurationInMillis   int           `json:"duration_in_millis"`
-		Failures           []interface{} `json:"failures"`
-		Shards             struct {
-			Total      int `json:"total"`
-			Failed     int `json:"failed"`
-			Successful int `json:"successful"`
-		} `json:"shards"`
-	} `json:"snapshots"`
+type SnapshotSnapshotMetadata struct {
+	Name               string        `json:"name,omitempty"`
+	Snapshot           string        `json:"snapshot,omitempty"`
+	UUID               string        `json:"uuid,omitempty"`
+	VersionID          int           `json:"version_id,omitempty"`
+	Version            string        `json:"version,omitempty"`
+	Indices            []string      `json:"indices,omitempty"`
+	IncludeGlobalState bool          `json:"include_global_state,omitempty"`
+	State              string        `json:"state,omitempty"`
+	StartTime          time.Time     `json:"start_time,omitempty"`
+	StartTimeInMillis  int64         `json:"start_time_in_millis,omitempty"`
+	EndTime            time.Time     `json:"end_time,omitempty"`
+	EndTimeInMillis    int64         `json:"end_time_in_millis,omitempty"`
+	DurationInMillis   int           `json:"duration_in_millis,omitempty"`
+	Failures           []interface{} `json:"failures,omitempty"`
+	Shards             struct {
+		Total      int `json:"total"`
+		Failed     int `json:"failed"`
+		Successful int `json:"successful"`
+	} `json:"shards,omitempty"`
 }
+
+type SnapshotRequestBody struct {
+	Indices string `json:"indices"`
+}
+
+type SnapshotRepositoryMetadata struct {
+	Type string `json:"type"`
+	Settings SnapshotRepositorySettingsMetadata `json:"settings"`
+}
+
+type SnapshotRepositorySettingsMetadata struct {
+	Bucket string `json:"bucket"`
+	BasePath string `json:"base_path"`
+	StorageClass string `json:"storage_class"`
+	Region string `json:"region"`
+}
+
+type SnapshotSnapshotsIndicesMetadata struct {
+	Snapshots []SnapshotSnapshotS3Metadata `json:"snapshots"`
+	Indices map[string] SnapshotIndexMetadata `json:"indices"`
+}
+
+type SnapshotIndexMetadata struct {
+	ID string `json:"id"`
+	Snapshots []string `json:"snapshots"`
+}
+
+type SnapshotSnapshotS3Metadata struct {
+	Name string `json:"name"`
+	UUID string `json:"uuid"`
+	State int `json:"state"`
+}
+

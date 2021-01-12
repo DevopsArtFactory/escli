@@ -32,10 +32,10 @@ func GetS3ClientFn(sess client.ConfigProvider, creds *credentials.Credentials) *
 	return s3.New(sess, &aws.Config{Credentials: creds})
 }
 
-func (c Client) GetObjects(bucket *string, prefix *string, delimeter *string, continuationToken *string) *s3.ListObjectsV2Output {
-	resp, _ := c.S3Client.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: bucket, Prefix: prefix, Delimiter: delimeter, ContinuationToken: continuationToken})
+func (c Client) GetObjects(bucket *string, prefix *string, delimeter *string, continuationToken *string) (*s3.ListObjectsV2Output, error) {
+	resp, err := c.S3Client.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: bucket, Prefix: prefix, Delimiter: delimeter, ContinuationToken: continuationToken})
 
-	return resp
+	return resp, err
 }
 
 func (c Client) TransitObject(bucket *string, key *string, storageClass string) (*s3.CopyObjectOutput, error) {
@@ -77,7 +77,6 @@ func (c Client) RestoreObject(bucket *string, key *string) error {
 	})
 
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 

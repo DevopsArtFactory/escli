@@ -17,6 +17,7 @@ limitations under the license.
 package cmd
 
 import (
+	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
 	"github.com/spf13/cobra"
 
 	"github.com/DevopsArtFactory/escli/cmd/cmd/cat"
@@ -25,11 +26,22 @@ import (
 func NewCatCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cat",
-		Short: "Cat api for elasticsearch cluster",
-		Long:  "Cat api for elasticsearch cluster",
+		Short: "cat api for elasticsearch cluster",
+		Long:  "cat api for elasticsearch cluster",
 	}
 
-	cmd.AddCommand(cat.NewHealthCommand())
+	catHealthCommand := cat.NewCatHealthCommand()
+	catIndicesCommand := cat.NewCatIndicesCommand()
+	catNodesCommand := cat.NewCatNodesCommand()
+	catShardsCommand := cat.NewCatShardsCommand()
+
+	cmd.AddCommand(catHealthCommand)
+	cmd.AddCommand(catIndicesCommand)
+	cmd.AddCommand(catNodesCommand)
+	cmd.AddCommand(catShardsCommand)
+
+	builder.SetCommandFlags(catIndicesCommand)
+	builder.SetCommandFlags(catShardsCommand)
 
 	return cmd
 }

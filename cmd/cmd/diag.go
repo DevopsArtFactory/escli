@@ -18,21 +18,22 @@ package cmd
 
 import (
 	"context"
+	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
 	"io"
 
 	"github.com/spf13/cobra"
 
-	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
-	"github.com/DevopsArtFactory/escli/internal/version"
+	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
-func NewVersionCommand() *cobra.Command {
-	return builder.NewCmd("version").
-		WithDescription("print the version information").
-		NoArgs(funcVersion)
+func NewDiagCommand() *cobra.Command {
+	return builder.NewCmd("diag").
+		WithDescription("diagnose cluster status").
+		NoArgs(funcDiagCommand)
 }
 
-// funcVersion
-func funcVersion(_ context.Context, _ io.Writer) error {
-	return version.Controller{}.Print(version.Get())
+func funcDiagCommand(ctx context.Context, out io.Writer) error {
+	return executor.RunExecutor(ctx, func(executor executor.Executor) error {
+		return executor.Runner.DiagCluster(out)
+	})
 }

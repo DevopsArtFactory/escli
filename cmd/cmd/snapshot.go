@@ -17,6 +17,7 @@ limitations under the license.
 package cmd
 
 import (
+	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
 	"github.com/spf13/cobra"
 
 	"github.com/DevopsArtFactory/escli/cmd/cmd/snapshot"
@@ -25,13 +26,31 @@ import (
 func NewSnapshotCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "snapshot",
-		Short: "Manage snapshot in elasticsearch cluster",
-		Long:  "Manage snapshot in elasticsearch cluster",
+		Short: "manage snapshot in elasticsearch cluster",
+		Long:  "manage snapshot in elasticsearch cluster",
 	}
 
-	cmd.AddCommand(snapshot.NewListCommand())
-	cmd.AddCommand(snapshot.NewArchiveCommand())
-	cmd.AddCommand(snapshot.NewRestoreCommand())
+	snapshotListCommand := snapshot.NewSnapshotListCommand()
+	snapshotArchiveCommand := snapshot.NewSnapshotArchiveCommand()
+	snapshotRestoreCommand := snapshot.NewSnapshotRestoreCommand()
+	snapshotCreateCommand := snapshot.NewSnapshotCreateCommand()
+	snapshotDeleteCommand := snapshot.NewSnapshotDeleteCommand()
+
+	cmd.AddCommand(snapshotListCommand)
+	builder.SetCommandFlags(snapshotListCommand)
+
+	cmd.AddCommand(snapshotArchiveCommand)
+	builder.SetCommandExample(snapshotArchiveCommand)
+	builder.SetCommandFlags(snapshotArchiveCommand)
+
+	cmd.AddCommand(snapshotRestoreCommand)
+	builder.SetCommandFlags(snapshotRestoreCommand)
+
+	cmd.AddCommand(snapshotCreateCommand)
+	builder.SetCommandExample(snapshotCreateCommand)
+
+	cmd.AddCommand(snapshotDeleteCommand)
+	builder.SetCommandExample(snapshotRestoreCommand)
 
 	return cmd
 }

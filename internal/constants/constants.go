@@ -23,6 +23,12 @@ const (
 	EmptyString   = ""
 )
 
+const (
+	GetSetting = 1
+	GetSettingWithName = 2
+	PutSetting = 3
+)
+
 var (
 	ConfigDirectoryPath = HomeDir() + "/.escli"
 	BaseFilePath        = ConfigDirectoryPath + "/config.yaml"

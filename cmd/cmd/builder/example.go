@@ -30,7 +30,19 @@ type Example struct {
 var ExampleList = []Example{
 	{
 		Description: "  escli restore snapshot application-log snapshot-2020.01.01 application-log-2020.01.01",
-		DefinedOn:   []string{"restore snapshot"},
+		DefinedOn:   []string{"snapshot restore"},
+	},
+	{
+		Description: "  escli snapshot delete application-log snapshot-2020.01.01",
+		DefinedOn:   []string{"snapshot delete"},
+	},
+	{
+		Description: "  escli snapshot create application-log snapshot-2020.01.01 application-log-2020.01.01,access-log-2020.01.01",
+		DefinedOn:   []string{"snapshot create [repositoryID] [snapshotID] [indices]"},
+	},
+	{
+		Description: "  escli snapshot archive application-log snapshot-2020.01.01",
+		DefinedOn:   []string{"snapshot archive [repositoryID] [snapshotID]"},
 	},
 }
 
@@ -38,7 +50,7 @@ func SetCommandExample(cmd *cobra.Command) {
 	for i := range ExampleList {
 		ex := &ExampleList[i]
 
-		if util.IsStringInArray(cmd.Short, ex.DefinedOn) {
+		if util.IsStringInArray(util.GetFullCommandUse(cmd), ex.DefinedOn) {
 			cmd.Example = ex.Description
 		}
 	}

@@ -14,25 +14,25 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package cmd
+package runner
 
 import (
-	"context"
+	"errors"
+	"github.com/DevopsArtFactory/escli/internal/constants"
 	"io"
-
-	"github.com/spf13/cobra"
-
-	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
-	"github.com/DevopsArtFactory/escli/internal/version"
 )
 
-func NewVersionCommand() *cobra.Command {
-	return builder.NewCmd("version").
-		WithDescription("print the version information").
-		NoArgs(funcVersion)
-}
+func (r Runner) ClusterSettings(out io.Writer, args []string) error {
+	switch len(args) {
+	case constants.GetSetting:
+		return r.Client.GetIndexSetting(args[0], "")
+	case constants.GetSettingWithName:
+		return r.Client.GetIndexSetting(args[0], args[1])
+	case constants.PutSetting:
+		r.Client.GetIndexSetting(args[0], args[1])
+	default:
+		errors.New("arguments must be 2 or 3")
+	}
 
-// funcVersion
-func funcVersion(_ context.Context, _ io.Writer) error {
-	return version.Controller{}.Print(version.Get())
+	return nil
 }

@@ -17,9 +17,13 @@ limitations under the license.
 package util
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/esapi"
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"os"
@@ -27,36 +31,9 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-
-	"github.com/DevopsArtFactory/escli/internal/schema"
 )
 
-func ConvertToMap(r io.Reader, d *map[string]interface{}) {
-	decoder := json.NewDecoder(r)
-	for {
-		if err := decoder.Decode(d); err == io.EOF {
-			break
-		}
-	}
-}
-
-func ConvertToHealthMetadata(r io.Reader, d *[]schema.HealthMetadata) {
-	decoder := json.NewDecoder(r)
-	err := decoder.Decode(d)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-}
-
-func ConvertToRepositorySnapshot(r io.Reader, d *[]schema.RepositorySnapshot) {
-	decoder := json.NewDecoder(r)
-	err := decoder.Decode(d)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-}
-
-func ConvertToSnapshotMetadata(r io.Reader, d *schema.SnapshotMetadata) {
+func ConvertJSONtoMetadata(r io.Reader, d interface{}) {
 	decoder := json.NewDecoder(r)
 	err := decoder.Decode(d)
 	if err != nil {
@@ -109,4 +86,86 @@ func CreateFile(filePath string, writeData string) error {
 		return err
 	}
 	return nil
+}
+
+func StringWithColor(content string) string {
+	switch content {
+	case "green":
+		return color.GreenString(content)
+	case "yellow":
+		return color.YellowString(content)
+	case "red":
+		return color.RedString(content)
+	case "FAILED":
+		return color.RedString(content)
+	case "IN_PROGRESS":
+		return color.YellowString(content)
+	case "PARTIAL":
+		return color.RedString(content)
+	case "SUCCESS":
+		return color.GreenString(content)
+	case "100.0%":
+		return color.GreenString(content)
+	}
+
+	if strings.Contains(content, "%") {
+		return color.RedString(content)
+	}
+
+	return color.BlueString(content)
+}
+
+func IntWithColor(number int, status string) string {
+	switch status {
+	case "green":
+		return color.GreenString("%d", number)
+	case "yellow":
+		return color.YellowString("%d", number)
+	case "red":
+		return color.RedString("%d", number)
+	}
+
+	return color.BlueString("%d", number)
+}
+
+func FloatWithColor(number float64) string {
+	if number > 90 {
+		return color.RedString("%.0f", number)
+	} else if number > 80 {
+		return color.YellowString("%.0f", number)
+	} else if number > 70 {
+		return color.BlueString("%.0f", number)
+	}
+
+	return color.GreenString("%.0f", number)
+}
+
+func IsEvenNumber(number int) bool {
+	if number%2 == 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func GetFullCommandUse(cmd *cobra.Command) string {
+	if cmd.Parent() != nil {
+		return fmt.Sprintf("%s %s", GetFullCommandUse(cmd.Parent()), cmd.Use)
+	}
+	return cmd.Use
+}
+
+func ReturnErrorFromResponseBody(response *esapi.Response) error {
+	switch response.StatusCode {
+	case 200:
+		return nil
+	default:
+		return errors.New(responseBodyToString(response.Body))
+	}
+}
+
+func responseBodyToString(closer io.ReadCloser) string {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(closer)
+	return buf.String()
 }

@@ -26,13 +26,14 @@ import (
 	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
-func NewListCommand() *cobra.Command {
+func NewSnapshotListCommand() *cobra.Command {
 	return builder.NewCmd("list").
-		WithDescription("Listing snapshots").
-		NoArgs(funcListSnapshot)
+		WithDescription("listing repository and snapshots").
+		WithLongDescription("abc").
+		NoArgs(funcSnapshotList)
 }
 
-func funcListSnapshot(ctx context.Context, out io.Writer) error {
+func funcSnapshotList(ctx context.Context, out io.Writer) error {
 	return executor.RunExecutor(ctx, func(executor executor.Executor) error {
 		return executor.Runner.ListSnapshot(out)
 	})

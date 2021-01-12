@@ -17,6 +17,7 @@ limitations under the license.
 package builder
 
 import (
+	"github.com/DevopsArtFactory/escli/internal/constants"
 	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -48,7 +49,54 @@ var FlagRegistry = []Flag{
 		Value:         aws.Bool(false),
 		DefValue:      false,
 		FlagAddMethod: "BoolVar",
-		DefinedOn:     []string{"restore snapshot"},
+		DefinedOn:     []string{
+			"snapshot restore [repositoryID] [snapshotID] [indexName]",
+			"snapshot create",
+			"snapshot delete",
+			"snapshot archive [repositoryID] [snapshotID]"},
+	},
+	{
+		Name:          "troubled-only",
+		Usage:         "show troubled only",
+		Value:         aws.Bool(false),
+		DefValue:      false,
+		FlagAddMethod: "BoolVar",
+		DefinedOn:     []string{"cat indices", "cat shards"},
+	},
+	{
+		Name:          "sort-by",
+		Shorthand:     "s",
+		Usage:         "sort by field",
+		Value:         aws.String(constants.EmptyString),
+		DefValue:      constants.EmptyString,
+		FlagAddMethod: "StringVar",
+		DefinedOn:     []string{"cat indices", "cat nodes", "cat shards"},
+	},
+	{
+		Name:          "repo-only",
+		Usage:         "shows information of repository only",
+		Value:         aws.Bool(false),
+		DefValue:      false,
+		FlagAddMethod: "BoolVar",
+		DefinedOn:     []string{"snapshot list"},
+	},
+	{
+		Name:          "with-repo",
+		Usage:         "shows snapshots only repo",
+		Value:         aws.String(constants.EmptyString),
+		DefValue:      constants.EmptyString,
+		FlagAddMethod: "StringVar",
+		DefinedOn:     []string{"snapshot list"},
+	},
+	{
+		Name:          "region",
+		Usage:         "specify AWS region",
+		Value:         aws.String(constants.EmptyString),
+		DefValue:      constants.EmptyString,
+		FlagAddMethod: "StringVar",
+		DefinedOn:     []string{
+			"snapshot restore [repositoryID] [snapshotID] [indexName]",
+			"snapshot archive [repositoryID] [snapshotID]"},
 	},
 }
 
@@ -87,7 +135,7 @@ func SetCommandFlags(cmd *cobra.Command) {
 	for i := range FlagRegistry {
 		fl := &FlagRegistry[i]
 
-		if util.IsStringInArray(cmd.Short, fl.DefinedOn) {
+		if util.IsStringInArray(util.GetFullCommandUse(cmd), fl.DefinedOn) {
 			cmd.Flags().AddFlag(fl.flag())
 			flagsForCommand = append(flagsForCommand, fl)
 		}
