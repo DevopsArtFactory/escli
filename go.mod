@@ -7,7 +7,9 @@ require (
 	github.com/GoogleContainerTools/skaffold v1.17.2 // indirect
 	github.com/aws/aws-sdk-go v1.36.5
 	github.com/elastic/go-elasticsearch v0.0.0
+	github.com/enescakir/emoji v1.0.0
 	github.com/fatih/color v1.10.0
+	github.com/kyokomi/emoji v2.2.4+incompatible // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1

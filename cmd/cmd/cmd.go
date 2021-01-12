@@ -37,14 +37,16 @@ func NewRootCommand(out, stderr io.Writer) *cobra.Command {
 		Long:          "manage elasticsearch cluster",
 		SilenceErrors: true,
 		SilenceUsage:  true,
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		},
 	}
 
 	rootCmd.AddCommand(NewSnapshotCommand())
 	rootCmd.AddCommand(NewCatCommand())
 	rootCmd.AddCommand(NewInitCommand())
 	rootCmd.AddCommand(NewVersionCommand())
+	rootCmd.AddCommand(NewDiagCommand())
+	rootCmd.AddCommand(NewIndexCommand())
+	rootCmd.AddCommand(NewClusterCommand())
+
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
 
 	return rootCmd

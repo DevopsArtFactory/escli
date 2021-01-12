@@ -14,25 +14,26 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package cmd
+package cat
 
 import (
 	"context"
+	"github.com/DevopsArtFactory/escli/internal/executor"
 	"io"
 
 	"github.com/spf13/cobra"
 
 	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
-	"github.com/DevopsArtFactory/escli/internal/version"
 )
 
-func NewVersionCommand() *cobra.Command {
-	return builder.NewCmd("version").
-		WithDescription("print the version information").
-		NoArgs(funcVersion)
+func NewCatIndicesCommand() *cobra.Command {
+	return builder.NewCmd("indices").
+		WithDescription("_cat/indices").
+		NoArgs(funcCatIndices)
 }
 
-// funcVersion
-func funcVersion(_ context.Context, _ io.Writer) error {
-	return version.Controller{}.Print(version.Get())
+func funcCatIndices(ctx context.Context, out io.Writer) error {
+	return executor.RunExecutor(ctx, func(executor executor.Executor) error {
+		return executor.Runner.CatIndices(out)
+	})
 }

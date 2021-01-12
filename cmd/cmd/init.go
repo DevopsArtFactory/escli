@@ -28,7 +28,7 @@ import (
 
 func NewInitCommand() *cobra.Command {
 	return builder.NewCmd("init").
-		WithDescription("Initialize escli configuration").
+		WithDescription("initialize escli configuration").
 		NoArgs(funcInitCommand)
 }
 

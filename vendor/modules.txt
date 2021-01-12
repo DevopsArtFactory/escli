@@ -58,6 +58,9 @@ github.com/aws/aws-sdk-go/service/sts/stsiface
 github.com/elastic/go-elasticsearch
 github.com/elastic/go-elasticsearch/esapi
 github.com/elastic/go-elasticsearch/estransport
+# github.com/enescakir/emoji v1.0.0
+## explicit
+github.com/enescakir/emoji
 # github.com/fatih/color v1.10.0
 ## explicit
 github.com/fatih/color
@@ -80,6 +83,8 @@ github.com/inconshreveable/mousetrap
 github.com/jmespath/go-jmespath
 # github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 github.com/kballard/go-shellquote
+# github.com/kyokomi/emoji v2.2.4+incompatible
+## explicit
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/mattn/go-colorable v0.1.8

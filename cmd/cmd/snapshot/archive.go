@@ -26,14 +26,13 @@ import (
 	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
-func NewArchiveCommand() *cobra.Command {
-	return builder.NewCmd("archive").
-		WithDescription("Archive snapshot to S3 glacier").
-		SetFlags().
-		ExactArgs(2, funcArchiveSnapshot)
+func NewSnapshotArchiveCommand() *cobra.Command {
+	return builder.NewCmd("archive [repositoryID] [snapshotID]").
+		WithDescription("archive snapshot data to s3 glacier. it support only S3 repository").
+		ExactArgs(2, funcSnapshotArchive)
 }
 
-func funcArchiveSnapshot(ctx context.Context, out io.Writer, args []string) error {
+func funcSnapshotArchive(ctx context.Context, out io.Writer, args []string) error {
 	return executor.RunExecutor(ctx, func(executor executor.Executor) error {
 		return executor.Runner.ArchiveSnapshot(out, args)
 	})

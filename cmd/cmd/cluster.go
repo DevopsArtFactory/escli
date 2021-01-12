@@ -17,22 +17,20 @@ limitations under the license.
 package cmd
 
 import (
-	"context"
-	"io"
-
+	"github.com/DevopsArtFactory/escli/cmd/cmd/cluster"
 	"github.com/spf13/cobra"
-
-	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
-	"github.com/DevopsArtFactory/escli/internal/version"
 )
 
-func NewVersionCommand() *cobra.Command {
-	return builder.NewCmd("version").
-		WithDescription("print the version information").
-		NoArgs(funcVersion)
-}
+func NewClusterCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cluster",
+		Short: "get or set settings for cluster",
+		Long:  "get or set settings for cluster",
+	}
 
-// funcVersion
-func funcVersion(_ context.Context, _ io.Writer) error {
-	return version.Controller{}.Print(version.Get())
+	clusterSettingsCommand := cluster.NewClusterSettingsCommand()
+
+	cmd.AddCommand(clusterSettingsCommand)
+
+	return cmd
 }

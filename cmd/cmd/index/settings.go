@@ -14,7 +14,7 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package cmd
+package index
 
 import (
 	"context"
@@ -23,16 +23,17 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
-	"github.com/DevopsArtFactory/escli/internal/version"
+	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
-func NewVersionCommand() *cobra.Command {
-	return builder.NewCmd("version").
-		WithDescription("print the version information").
-		NoArgs(funcVersion)
+func NewIndexSettingsCommand() *cobra.Command {
+	return builder.NewCmd("settings").
+		WithDescription("get or set settings for index").
+		WithOrWithoutArgs(funcIndexSettings)
 }
 
-// funcVersion
-func funcVersion(_ context.Context, _ io.Writer) error {
-	return version.Controller{}.Print(version.Get())
+func funcIndexSettings(ctx context.Context, out io.Writer, args []string) error {
+	return executor.RunExecutor(ctx, func(executor executor.Executor) error {
+		return executor.Runner.IndexSettings(out, args)
+	})
 }

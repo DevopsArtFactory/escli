@@ -19,9 +19,10 @@ package runner
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/DevopsArtFactory/escli/internal/constants"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"runtime"
@@ -36,43 +37,104 @@ import (
 )
 
 func (r Runner) ListSnapshot(out io.Writer) error {
-	r.Client.ListSnapshot()
+	repositoriesMetadata, err := r.Client.GetRepositories()
+	if err != nil {
+		return err
+	}
+
+	for _, repository := range repositoriesMetadata {
+		if r.Flag.WithRepo == repository.ID || r.Flag.WithRepo == constants.EmptyString {
+			fmt.Fprintf(out, "Repository ID : %s\n", util.StringWithColor(repository.ID))
+		}
+		if !r.Flag.RepoOnly {
+			if r.Flag.WithRepo == repository.ID || r.Flag.WithRepo == constants.EmptyString {
+				snapshotsMetadata, err := r.Client.GetSnapshots(repository.ID)
+				if err != nil {
+					continue
+				}
+				fmt.Fprintf(out, "%-50s\t%s\n",
+					"ID",
+					"state")
+				for _, snapshotMetadata := range snapshotsMetadata.SnapshotSnapshotMetadata {
+					fmt.Fprintf(out, "%-50s\t%s\n",
+						snapshotMetadata.Snapshot,
+						util.StringWithColor(snapshotMetadata.State))
+					fmt.Fprintf(out, "%s\n",
+						snapshotMetadata.Indices)
+				}
+			}
+		}
+	}
 	return nil
 }
 
+func (r Runner) CreateSnapshot(out io.Writer, args []string) error {
+	repositoryID := args[0]
+	snapshotID := args[1]
+	indices := args[2]
+
+	requestBody, err := json.Marshal(
+			schema.SnapshotRequestBody{
+				Indices: indices,
+			},
+	)
+	if err != nil {
+		return err
+	}
+
+	statusCode, err := r.Client.CreateSnapshot(repositoryID, snapshotID, string(requestBody))
+	fmt.Fprintf(out, "%d\n", statusCode)
+
+	return err
+}
+
+func (r Runner) DeleteSnapshot(out io.Writer, args []string) error {
+	repositoryID := args[0]
+	snapshotID := args[1]
+
+	statusCode, err := r.Client.DeleteSnapshot(repositoryID, snapshotID)
+	fmt.Fprintf(out, "%d\n", statusCode)
+
+	return err
+}
+
 func (r Runner) ArchiveSnapshot(out io.Writer, args []string) error {
-	var repositoryName string
-	var snapshotName string
-	var snapshotMetadata schema.SnapshotMetadata
-	var indexMetadata map[string]interface{}
+	repositoryID := args[0]
+	snapshotID := args[1]
 
 	var wait sync.WaitGroup
 	runtime.GOMAXPROCS(4)
 
-	repositoryName = args[0]
-	snapshotName = args[1]
+	snapshotRepositoryMetadata := r.Client.GetSnapshotRepositoryMetadata(repositoryID)
 
-	bucketName, basePath := r.Client.GetRepositoryMetadata(repositoryName)
+	if snapshotRepositoryMetadata.Type != "s3" {
+		return errors.New("archive is only supported s3 type repository")
+	}
 
-	fmt.Println(bucketName)
-	fmt.Println(basePath)
+	if snapshotRepositoryMetadata.Settings.Bucket == constants.EmptyString {
+		return errors.New("archive is only supported normal s3 type repository. this repository doesn't have settings information")
+	}
 
-	util.ConvertToSnapshotMetadata(
-		r.Client.GetSnapshotMetadata(repositoryName, snapshotName),
-		&snapshotMetadata)
+	fmt.Fprintf(out, "bucket name : %s\n", util.StringWithColor(snapshotRepositoryMetadata.Settings.Bucket))
+	fmt.Fprintf(out, "base path : %s\n", util.StringWithColor(snapshotRepositoryMetadata.Settings.BasePath))
 
-	fmt.Println(snapshotMetadata.Snapshots[0].Indices)
+	snapshotSnapshotsMetadata := r.Client.GetSnapshotSnapshotsMetadata(repositoryID, snapshotID)
 
-	resp := r.getIndexIDFromS3(aws.String(bucketName), aws.String(basePath+"/"))
+	snapshotSnapshotsIndicesMetadata, err := r.getIndexIDFromS3(
+		aws.String(snapshotRepositoryMetadata.Settings.Bucket),
+		aws.String(snapshotRepositoryMetadata.Settings.BasePath+"/"),
+	)
 
-	indexMetadata = resp["indices"].(map[string]interface{})
+	if err != nil {
+		return err
+	}
 
-	for i := range snapshotMetadata.Snapshots[0].Indices {
-		indexName := snapshotMetadata.Snapshots[0].Indices[i]
-		metaData := indexMetadata[indexName].(map[string]interface{})
-		prefix := basePath + "/indices/" + metaData["id"].(string) + "/"
+	for _, indexName := range snapshotSnapshotsMetadata.SnapshotSnapshotMetadata[0].Indices {
+		fmt.Fprintf(out, "index name : %s\n", util.StringWithColor(indexName))
+		metaData := snapshotSnapshotsIndicesMetadata.Indices[indexName]
+		prefix := snapshotRepositoryMetadata.Settings.BasePath + "/indices/" + metaData.ID + "/"
 
-		objs := r.Client.GetObjects(aws.String(bucketName), aws.String(prefix), nil, nil)
+		objs, _ := r.Client.GetObjects(aws.String(snapshotRepositoryMetadata.Settings.Bucket), aws.String(prefix), nil, nil)
 
 		for {
 			for _, item := range objs.Contents {
@@ -83,7 +145,7 @@ func (r Runner) ArchiveSnapshot(out io.Writer, args []string) error {
 						wait.Add(1)
 						go func(key string) {
 							defer wait.Done()
-							_, err := r.Client.TransitObject(aws.String(bucketName), aws.String(key), "GLACIER")
+							_, err := r.Client.TransitObject(aws.String(snapshotRepositoryMetadata.Settings.Bucket), aws.String(key), "GLACIER")
 							if err != nil {
 								panic(err)
 							}
@@ -97,7 +159,7 @@ func (r Runner) ArchiveSnapshot(out io.Writer, args []string) error {
 						if strings.ToLower(strings.TrimSpace(resp)) == "y" {
 							color.Green("Change Storage Class to %s -> GLACIER", *item.StorageClass)
 							wait.Add(1)
-							_, err := r.Client.TransitObject(aws.String(bucketName), item.Key, "GLACIER")
+							_, err := r.Client.TransitObject(aws.String(snapshotRepositoryMetadata.Settings.Bucket), item.Key, "GLACIER")
 							if err != nil {
 								panic(err)
 							}
@@ -110,7 +172,7 @@ func (r Runner) ArchiveSnapshot(out io.Writer, args []string) error {
 			wait.Wait()
 
 			if *objs.IsTruncated {
-				objs = r.Client.GetObjects(aws.String(bucketName), aws.String(prefix), nil, objs.NextContinuationToken)
+				objs, _ = r.Client.GetObjects(aws.String(snapshotRepositoryMetadata.Settings.Bucket), aws.String(prefix), nil, objs.NextContinuationToken)
 			} else {
 				break
 			}
@@ -119,8 +181,12 @@ func (r Runner) ArchiveSnapshot(out io.Writer, args []string) error {
 	return nil
 }
 
-func (r Runner) getIndexIDFromS3(bucket *string, prefix *string) map[string]interface{} {
-	resp := r.Client.GetObjects(bucket, prefix, aws.String("/"), nil)
+func (r Runner) getIndexIDFromS3(bucket *string, prefix *string) (*schema.SnapshotSnapshotsIndicesMetadata, error) {
+	var SnapshotSnapshotsIndicesMetadata schema.SnapshotSnapshotsIndicesMetadata
+	resp, err := r.Client.GetObjects(bucket, prefix, aws.String("/"), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	re := regexp.MustCompile("[0-9]+")
 
@@ -139,84 +205,116 @@ func (r Runner) getIndexIDFromS3(bucket *string, prefix *string) map[string]inte
 
 	downloadFileName := r.Client.DownloadFileFromS3(bucket, &snapshotMetadataKey)
 
-	// Open our jsonFile
 	jsonFile, err := os.Open(downloadFileName)
-	// if we os.Open returns an error then handle it
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
-	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	util.ConvertJSONtoMetadata(jsonFile, &SnapshotSnapshotsIndicesMetadata)
 
-	var result map[string]interface{}
-	json.Unmarshal(byteValue, &result)
-
-	return result
+	return &SnapshotSnapshotsIndicesMetadata, nil
 }
 
 func (r Runner) RestoreSnapshot(out io.Writer, args []string) error {
-	var repositoryName string
-	var snapshotName string
-	var indexName string
-	var requestBody string
-	var indexMetadata map[string]interface{}
+	repositoryID := args[0]
+	snapshotID := args[1]
+	indexName := args[2]
 	areAllObjectsStandard := true
 
-	repositoryName = args[0]
-	snapshotName = args[1]
-	indexName = args[2]
+	snapshotRepositoryMetadata := r.Client.GetSnapshotRepositoryMetadata(repositoryID)
 
-	bucketName, basePath := r.Client.GetRepositoryMetadata(repositoryName)
+	if snapshotRepositoryMetadata.Type == "s3" {
+		fmt.Fprintf(out, "bucket name : %s\n", util.StringWithColor(snapshotRepositoryMetadata.Settings.Bucket))
+		fmt.Fprintf(out, "base path : %s\n", util.StringWithColor(snapshotRepositoryMetadata.Settings.BasePath))
 
-	resp := r.getIndexIDFromS3(aws.String(bucketName), aws.String(basePath+"/"))
-	indexMetadata = resp["indices"].(map[string]interface{})
+		snapshotSnapshotsIndicesMetadata, err := r.getIndexIDFromS3(
+			aws.String(snapshotRepositoryMetadata.Settings.Bucket),
+			aws.String(snapshotRepositoryMetadata.Settings.BasePath+"/"),
+		)
 
-	metaData := indexMetadata[indexName].(map[string]interface{})
-	prefix := basePath + "/indices/" + metaData["id"].(string) + "/"
+		if err != nil {
+			return err
+		}
 
-	objs := r.Client.GetObjects(aws.String(bucketName), aws.String(prefix), nil, nil)
+		for {
+			metaData := snapshotSnapshotsIndicesMetadata.Indices[indexName]
+			prefix := snapshotRepositoryMetadata.Settings.BasePath + "/indices/" + metaData.ID + "/"
 
-	for {
-		for _, item := range objs.Contents {
-			fmt.Println(*item.Key)
-			if *item.StorageClass == "GLACIER" {
-				areAllObjectsStandard = false
-				if r.Flag.Force {
-					color.Green("Restore Storage Class to %s -> STANDARD", *item.StorageClass)
-					err := r.Client.RestoreObject(aws.String(bucketName), item.Key)
-					if err != nil {
-						panic(err)
-					}
-				} else {
-					reader := bufio.NewReader(os.Stdin)
+			objs, _ := r.Client.GetObjects(aws.String(snapshotRepositoryMetadata.Settings.Bucket), aws.String(prefix), nil, nil)
 
-					color.Blue("Change Storage Class to STANDARD [y/n]: ")
-
-					resp, _ := reader.ReadString('\n')
-					if strings.ToLower(strings.TrimSpace(resp)) == "y" {
-						color.Green("Change Storage Class to %s -> STANDARD", *item.StorageClass)
-						err := r.Client.RestoreObject(aws.String(bucketName), item.Key)
+			for _, item := range objs.Contents {
+				fmt.Println(*item.Key)
+				if *item.StorageClass == "GLACIER" {
+					areAllObjectsStandard = false
+					if r.Flag.Force {
+						color.Green("Restore Storage Class to %s -> STANDARD", *item.StorageClass)
+						err := r.restoreObject(out, aws.String(snapshotRepositoryMetadata.Settings.Bucket), item.Key)
 						if err != nil {
 							panic(err)
 						}
 					} else {
-						color.Red("Don't change storage class %s", *item.Key)
+						reader := bufio.NewReader(os.Stdin)
+
+						color.Blue("Change Storage Class to STANDARD [y/n]: ")
+
+						resp, _ := reader.ReadString('\n')
+						if strings.ToLower(strings.TrimSpace(resp)) == "y" {
+							color.Green("Change Storage Class to %s -> STANDARD", *item.StorageClass)
+							err := r.restoreObject(out, aws.String(snapshotRepositoryMetadata.Settings.Bucket), item.Key)
+							if err != nil {
+								panic(err)
+							}
+						} else {
+							color.Red("Don't change storage class %s", *item.Key)
+						}
 					}
 				}
 			}
+			if *objs.IsTruncated {
+				objs, _ = r.Client.GetObjects(aws.String(snapshotRepositoryMetadata.Settings.Bucket), aws.String(prefix), nil, objs.NextContinuationToken)
+			} else {
+				break
+			}
 		}
-		if *objs.IsTruncated {
-			objs = r.Client.GetObjects(aws.String(bucketName), aws.String(prefix), nil, objs.NextContinuationToken)
-		} else {
-			break
-		}
+
 	}
 
 	if areAllObjectsStandard {
-		resp, _ := r.Client.RestoreSnapshot(requestBody, repositoryName, snapshotName)
+		requestBody, _ := json.Marshal(
+			schema.SnapshotRequestBody{
+				Indices: indexName,
+			},
+		)
+
+		resp, _ := r.Client.RestoreSnapshot(string(requestBody), repositoryID, snapshotID)
 		fmt.Println(resp)
+	}
+
+	return nil
+}
+
+func (r Runner) restoreObject(out io.Writer, bucket *string, key *string) error {
+	resp, err := r.Client.HeadObject(bucket, key)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.Restore != nil {
+		if *resp.Restore == "ongoing-request=\"true\"" {
+			fmt.Fprintf(out, "%s is ongoing-restore\n", util.StringWithColor(*key))
+			return nil
+		} else {
+			r.Client.TransitObject(bucket, key, "STANDARD")
+			return nil
+		}
+	}
+
+	err = r.Client.RestoreObject(bucket, key)
+
+	if err != nil {
+		return err
 	}
 
 	return nil

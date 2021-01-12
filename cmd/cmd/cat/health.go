@@ -26,10 +26,9 @@ import (
 	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
-func NewHealthCommand() *cobra.Command {
+func NewCatHealthCommand() *cobra.Command {
 	return builder.NewCmd("health").
 		WithDescription("_cat/health").
-		SetFlags().
 		NoArgs(funcCatHealth)
 }
 

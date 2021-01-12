@@ -17,22 +17,20 @@ limitations under the license.
 package cmd
 
 import (
-	"context"
-	"io"
-
+	"github.com/DevopsArtFactory/escli/cmd/cmd/index"
 	"github.com/spf13/cobra"
-
-	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
-	"github.com/DevopsArtFactory/escli/internal/version"
 )
 
-func NewVersionCommand() *cobra.Command {
-	return builder.NewCmd("version").
-		WithDescription("print the version information").
-		NoArgs(funcVersion)
-}
+func NewIndexCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "index",
+		Short: "get or set settings for index",
+		Long:  "get or set settings for index",
+	}
 
-// funcVersion
-func funcVersion(_ context.Context, _ io.Writer) error {
-	return version.Controller{}.Print(version.Get())
+	indexSettingsCommand := index.NewIndexSettingsCommand()
+
+	cmd.AddCommand(indexSettingsCommand)
+
+	return cmd
 }

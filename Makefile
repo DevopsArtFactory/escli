@@ -27,7 +27,7 @@ GCP_ONLY ?= false
 GCP_PROJECT ?= escli
 
 SUPPORTED_PLATFORMS = linux-amd64 darwin-amd64 windows-amd64.exe linux-arm64
-BUILD_PACKAGE = $(REPOPATH)/$(COMMAND_PKG)/$(PROJECT)
+BUILD_PACKAGE = $(REPOPATH)/$(COMMAND_PKG)
 
 escli_TEST_PACKAGES = ./pkg/... ./cmd/... ./hack/...
 GO_FILES = $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./pkg/diag/*")

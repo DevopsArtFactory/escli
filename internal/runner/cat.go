@@ -18,10 +18,9 @@ package runner
 
 import (
 	"fmt"
+	"github.com/DevopsArtFactory/escli/internal/util"
 	"io"
 	"reflect"
-
-	"github.com/fatih/color"
 )
 
 func (r Runner) CatHealth(out io.Writer) error {
@@ -30,48 +29,112 @@ func (r Runner) CatHealth(out io.Writer) error {
 		return err
 	}
 
-	printHealthMetadata(&healthMetadata[0])
-
-	return nil
-}
-
-func printHealthMetadata(metadata interface{}) {
-	e := reflect.ValueOf(metadata).Elem()
+	e := reflect.ValueOf(&healthMetadata[0]).Elem()
 	filedNum := e.NumField()
 
 	for i := 0; i < filedNum; i++ {
 		v := e.Field(i)
 		t := e.Type().Field(i)
 
-		switch t.Name {
-		case "Status":
-			printHealthWithColor(fmt.Sprintf("%s", v.Interface()))
-		case "ActiveShardsPercent":
-			printActiveShardsPercentWithColor(fmt.Sprintf("%s", v.Interface()))
-		default:
-			fmt.Printf("%s : %s\n", t.Name, v.Interface())
+		fmt.Printf("%-20s : %10s\n", t.Name,
+			util.StringWithColor(fmt.Sprintf("%s", v.Interface())),
+		)
+	}
+
+	return nil
+}
+
+func (r Runner) CatIndices(out io.Writer) error {
+	indicesMetadata, err := r.Client.CatIndices(r.Flag.SortBy)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(out,"%-50s\t%s\t%s\t%s\t%s\t%10s\n",
+		"index",
+		"health",
+		"status",
+		"pri",
+		"rep",
+		"store.size")
+	for _, index := range indicesMetadata {
+		if r.Flag.TroubledOnly && index.Health == "green" {
+			continue
 		}
+		fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%10s\n",
+			index.Index,
+			util.StringWithColor(index.Health),
+			index.Status,
+			index.PrimaryShards,
+			index.ReplicaShards,
+			index.StoreSize)
 	}
+
+	return nil
 }
 
-func printHealthWithColor(health string) {
-	fmt.Print("Status : ")
-	switch health {
-	case "green":
-		color.Green(health)
-	case "yellow":
-		color.Yellow(health)
-	case "red":
-		color.Red(health)
+func (r Runner) CatNodes(out io.Writer) error {
+	nodesMetadata, err := r.Client.CatNodes(r.Flag.SortBy)
+	if err != nil {
+		return err
 	}
+
+	fmt.Fprintf(out, "%-50s\t%s\t%4s\t%7s\t%7s\t%8s\t%6s\t%17s\n",
+		"name",
+		"ip",
+		"role",
+		"load_1m",
+		"load_5m",
+		"load_15m",
+		"uptime",
+		"disk.used_percent")
+	for _, node := range nodesMetadata {
+		fmt.Fprintf(out, "%-50s\t%s\t%4s\t%7s\t%7s\t%8s\t%6s\t%17s\n",
+			node.Name,
+			node.IP,
+			node.NodeRole,
+			node.Load1M,
+			node.Load5M,
+			node.Load15M,
+			node.Uptime,
+			node.DiskUsedPercent)
+	}
+
+	return nil
 }
 
-func printActiveShardsPercentWithColor(percent string) {
-	fmt.Print("ActiveShardsPercent : ")
-	switch percent {
-	case "100.0%":
-		color.Green(percent)
-	default:
-		color.Red(percent)
+func (r Runner) CatShards(out io.Writer) error {
+	shardsMetadata, err := r.Client.CatShards(r.Flag.SortBy)
+	if err != nil {
+		return err
 	}
+
+	fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+		"index",
+		"shard",
+		"prirep",
+		"state",
+		"docs",
+		"store",
+		"ip",
+		"node",
+		"unassigned.reason")
+	for _, shard := range shardsMetadata {
+		if r.Flag.TroubledOnly && shard.State == "STARTED" {
+			continue
+		}
+		fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+			shard.Index,
+			shard.Shard,
+			shard.PriRep,
+			shard.State,
+			shard.Docs,
+			shard.Store,
+			shard.IP,
+			shard.Node,
+			shard.UnassignedReason)
+	}
+
+
+	return nil
 }
