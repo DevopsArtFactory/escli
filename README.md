@@ -23,7 +23,7 @@ $ escli index setting my-index-000001 number_of_replicas 2
 
 #### On MAC
 ```bash
-$ brew tap DevopsArtFactory/escli
+$ brew tap devopsartfactory/devopsart
 $ brew update
 $ brew install escli 
 ``` 
