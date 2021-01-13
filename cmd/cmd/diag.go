@@ -18,11 +18,11 @@ package cmd
 
 import (
 	"context"
-	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
 	"io"
 
 	"github.com/spf13/cobra"
 
+	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
 	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 

@@ -14,15 +14,15 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package schema
+package snapshotschema
 
 import "time"
 
-type SnapshotSnapshotsMetadata struct {
-	SnapshotSnapshotMetadata []SnapshotSnapshotMetadata `json:"snapshots"`
+type Snapshots struct {
+	Snapshots []Snapshot `json:"snapshots"`
 }
 
-type SnapshotSnapshotMetadata struct {
+type Snapshot struct {
 	Name               string        `json:"name,omitempty"`
 	Snapshot           string        `json:"snapshot,omitempty"`
 	UUID               string        `json:"uuid,omitempty"`
@@ -44,35 +44,34 @@ type SnapshotSnapshotMetadata struct {
 	} `json:"shards,omitempty"`
 }
 
-type SnapshotRequestBody struct {
+type RequestBody struct {
 	Indices string `json:"indices"`
 }
 
-type SnapshotRepositoryMetadata struct {
-	Type string `json:"type"`
-	Settings SnapshotRepositorySettingsMetadata `json:"settings"`
+type Repository struct {
+	Type     string             `json:"type"`
+	Settings RepositorySettings `json:"settings"`
 }
 
-type SnapshotRepositorySettingsMetadata struct {
-	Bucket string `json:"bucket"`
-	BasePath string `json:"base_path"`
+type RepositorySettings struct {
+	Bucket       string `json:"bucket"`
+	BasePath     string `json:"base_path"`
 	StorageClass string `json:"storage_class"`
-	Region string `json:"region"`
+	Region       string `json:"region"`
 }
 
-type SnapshotSnapshotsIndicesMetadata struct {
-	Snapshots []SnapshotSnapshotS3Metadata `json:"snapshots"`
-	Indices map[string] SnapshotIndexMetadata `json:"indices"`
+type SnapshotsIndicesS3 struct {
+	Snapshots []SnapshotS3       `json:"snapshots"`
+	Indices   map[string]IndexS3 `json:"indices"`
 }
 
-type SnapshotIndexMetadata struct {
-	ID string `json:"id"`
+type IndexS3 struct {
+	ID        string   `json:"id"`
 	Snapshots []string `json:"snapshots"`
 }
 
-type SnapshotSnapshotS3Metadata struct {
-	Name string `json:"name"`
-	UUID string `json:"uuid"`
-	State int `json:"state"`
+type SnapshotS3 struct {
+	Name  string `json:"name"`
+	UUID  string `json:"uuid"`
+	State int    `json:"state"`
 }
-

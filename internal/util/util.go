@@ -21,9 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/elastic/go-elasticsearch/esapi"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"os"
@@ -31,6 +28,9 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/elastic/go-elasticsearch/esapi"
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 )
 
 func ConvertJSONtoMetadata(r io.Reader, d interface{}) {
@@ -88,6 +88,18 @@ func CreateFile(filePath string, writeData string) error {
 	return nil
 }
 
+func GreenString(content string) string {
+	return color.GreenString(content)
+}
+
+func RedString(content string) string {
+	return color.RedString(content)
+}
+
+func YellowString(content string) string {
+	return color.YellowString(content)
+}
+
 func StringWithColor(content string) string {
 	switch content {
 	case "green":
@@ -129,23 +141,20 @@ func IntWithColor(number int, status string) string {
 }
 
 func FloatWithColor(number float64) string {
-	if number > 90 {
+	switch {
+	case number > 90:
 		return color.RedString("%.0f", number)
-	} else if number > 80 {
+	case number > 80:
 		return color.YellowString("%.0f", number)
-	} else if number > 70 {
+	case number > 70:
 		return color.BlueString("%.0f", number)
+	default:
+		return color.GreenString("%.0f", number)
 	}
-
-	return color.GreenString("%.0f", number)
 }
 
 func IsEvenNumber(number int) bool {
-	if number%2 == 0 {
-		return true
-	} else {
-		return false
-	}
+	return number%2 == 0
 }
 
 func GetFullCommandUse(cmd *cobra.Command) string {
@@ -164,7 +173,7 @@ func ReturnErrorFromResponseBody(response *esapi.Response) error {
 	}
 }
 
-func responseBodyToString(closer io.ReadCloser) string {
+func responseBodyToString(closer io.Reader) string {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(closer)
 	return buf.String()

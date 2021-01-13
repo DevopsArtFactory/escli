@@ -1,5 +1,19 @@
 # escli
-`escli` is a command-line tool for managing elasticsearch cluster. 
+`escli` is a command-line tool for managing elasticsearch cluster. If you want to set number_of_replicas of index, you should do with curl like below example.
+```bash
+$ curl -X PUT "localhost:9200/my-index-000001/_settings?pretty" -H 'Content-Type: application/json' -d'
+{
+  "index" : {
+    "number_of_replicas" : 2
+  }
+}
+'
+```
+But with escli, you type below command.
+```bash
+$ escli index setting my-index-000001 number_of_replicas 2
+```
+`escli` should be make your elasticsearch experience more powerful.
 
 ## Installation
 ### Required
@@ -81,30 +95,121 @@ application-log-2021.01.06                   green   open    100     1          
 | snapshot list        | shows information of repositories and snapshots. it calls `_cat/snapshot` API. |
 | snapshot archive     | change storage class of snapshots to S3 glacier. it works on AWS only.  |
 | snapshot restore     | change storage class of snapshots to S3 standard and restore snapshot.    |
-| snapshot take        | take snapshot of indices.    |
+| snapshot create        | create snapshot of indices.    |
 
 #### available options
 | option        | description                                                      |
 | ------------- | ---------------------------------------------------------------- |
-| force | do not ask continue. it will be used for automated batch job.  |
+| force | do not ask continue. it will be used for automated batch job. (only `archive`, `restore` command) |
+| with-repo | shows snapshots of specified repo (only `list` command) |
+| repo-only | shows only information of repos (only `list` command) |
 
 #### examples
 
 ```bash
-$ escli snapshot list
+$ escli snapshot list --repo-only
+Repository ID : log-archive
+Repository ID : log-archive-standard-ia
+Repository ID : log-archive-standard
 ```
+
+```bash
+$ escli snapshot create prod-snapshot snapshots-2021-01-01 result-prod-2021-01-01
+snapshots-2021-01-01 is created
+```
+
+```bash
+$ escli snapshot archive send-mail-result-prod-snapshot snapshots-2020-12-31 --region us-east-1
+bucket name : result-prod
+base path : elasticsearch-snapshot-standard
+Downloaded /tmp/index-456 81207 bytes
+index name : result-prod-2020-12-31
+elasticsearch-snapshot-standard/indices/z8bqmUmAQxy8tuwSsmFEKg/0/__-urzTmmuR8K6s6kpLryZ5g
+? Change Storage Class to GLACIER 
+```
+
+- If you use `--force` option to `snapshot arvhice` command, escli doesn't ask you to continue. It makes all archiving job.
 
 ### `index` command
 
 #### command list
-| command     | description                                               |
-| ----------- | --------------------------------------------------------- |
-| index settings       | get or set settings of index.  |
-
-#### available options
-| option        | description                                                      |
-| ------------- | ---------------------------------------------------------------- |
-| force | do not ask continue. it will be used for automated batch job.  |
+| command | description |
+| index settings | get or set index settings |
 
 #### examples
 
+```bash
+$ escli index settings prod-2021-01-01 
+{
+  "prod-2021-01-01" : {
+    "settings" : {
+      "index" : {
+        "creation_date" : "1609906432373",
+        "number_of_shards" : "5",
+        "number_of_replicas" : "2",
+        "uuid" : "ha6Y6uiCSfOV_syHJwFCqA",
+        "version" : {
+          "created" : "6080099"
+        },
+        "provided_name" : "send-mail-result-prod-2021-01-01"
+      }
+    }
+  }
+}
+```
+
+```bash
+$ escli index settings prod-2021-01-12 number_of_replicas                                                                                                                                                                                               ok  3s 
+{
+  "prod-2021-01-12" : {
+    "settings" : {
+      "index" : {
+        "number_of_replicas" : "1"
+      }
+    }
+  }
+}
+```
+
+```bash
+$ escli index settings send-mail-result-prod-2021-01-12 number_of_replicas 2                                                                                                                                                                                                 ok 
+{
+  "acknowledged" : true
+}
+```
+
+### `cluster` command
+
+#### command list
+| command | description |
+| cluster settings | get or set index settings |
+
+#### examples
+
+```bash
+$ escli cluster settings
+{
+  "persistent" : {
+    "cluster" : {
+      "routing" : {
+        "allocation" : {
+......
+}
+```
+
+```bash
+$ escli cluster settings persistent indices.recovery.max_bytes_per_sec 50mb
+```
+
+### `diag` command
+
+#### examples
+
+```bash
+$ escli diag
+check cluster status...........................[green] 😎
+check yellow status indices....................[0] 😎
+check red status indices.......................[0] 😎
+check number of master nodes...................[3]
+check maximum disk used percent of nodes.......[36]
+```

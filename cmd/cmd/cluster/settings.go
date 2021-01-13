@@ -34,6 +34,6 @@ func NewClusterSettingsCommand() *cobra.Command {
 
 func funcClusterSettings(ctx context.Context, out io.Writer, args []string) error {
 	return executor.RunExecutor(ctx, func(executor executor.Executor) error {
-		return executor.Runner.IndexSettings(out, args)
+		return executor.Runner.ClusterSettings(out, args)
 	})
 }

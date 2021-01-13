@@ -18,14 +18,14 @@ package client
 
 import (
 	"bytes"
-	"fmt"
-	"github.com/DevopsArtFactory/escli/internal/constants"
 	"strings"
 
 	"github.com/elastic/go-elasticsearch"
 	"github.com/elastic/go-elasticsearch/esapi"
 
-	"github.com/DevopsArtFactory/escli/internal/schema"
+	"github.com/DevopsArtFactory/escli/internal/constants"
+	catSchema "github.com/DevopsArtFactory/escli/internal/schema/cat"
+	snapshotSchema "github.com/DevopsArtFactory/escli/internal/schema/snapshot"
 	"github.com/DevopsArtFactory/escli/internal/util"
 )
 
@@ -40,8 +40,8 @@ func GetESClientFn(elasticSearchURL string) *elasticsearch.Client {
 	return es
 }
 
-func (c Client) GetRepositories() ([]schema.CatRepositoryMetadata, error) {
-	var repositoriesMetadata []schema.CatRepositoryMetadata
+func (c Client) GetRepositories() ([]catSchema.Repository, error) {
+	var repositories []catSchema.Repository
 
 	resp, err := c.ESClient.Cat.Repositories(
 		c.ESClient.Cat.Repositories.WithFormat("json"))
@@ -49,22 +49,22 @@ func (c Client) GetRepositories() ([]schema.CatRepositoryMetadata, error) {
 		return nil, err
 	}
 
-	util.ConvertJSONtoMetadata(resp.Body, &repositoriesMetadata)
+	util.ConvertJSONtoMetadata(resp.Body, &repositories)
 
-	return repositoriesMetadata, nil
+	return repositories, nil
 }
 
-func (c Client) GetSnapshots(repositoryID string) (schema.SnapshotSnapshotsMetadata, error) {
-	var snapshotsMetadata schema.SnapshotSnapshotsMetadata
+func (c Client) GetSnapshots(repositoryID string) (snapshotSchema.Snapshots, error) {
+	var snapshots snapshotSchema.Snapshots
 
 	resp, err := c.ESClient.Snapshot.Get(repositoryID, []string{"*"})
 	if err != nil {
-		return snapshotsMetadata, err
+		return snapshots, err
 	}
 
-	util.ConvertJSONtoMetadata(resp.Body, &snapshotsMetadata)
+	util.ConvertJSONtoMetadata(resp.Body, &snapshots)
 
-	return snapshotsMetadata, nil
+	return snapshots, nil
 }
 
 func (c Client) CreateSnapshot(repositoryID, snapshotID, requestBody string) (int, error) {
@@ -83,7 +83,7 @@ func (c Client) DeleteSnapshot(repositoryID, snapshotID string) (int, error) {
 	resp, err := c.ESClient.Snapshot.Delete(
 		repositoryID,
 		snapshotID,
-		)
+	)
 	if err != nil {
 		return resp.StatusCode, err
 	}
@@ -91,24 +91,24 @@ func (c Client) DeleteSnapshot(repositoryID, snapshotID string) (int, error) {
 	return resp.StatusCode, util.ReturnErrorFromResponseBody(resp)
 }
 
-func (c Client) GetSnapshotRepositoryMetadata(repositoryID string) schema.SnapshotRepositoryMetadata {
-	var snapshotRepositoryMetadata map[string]schema.SnapshotRepositoryMetadata
+func (c Client) GetRepository(repositoryID string) snapshotSchema.Repository {
+	var repositories map[string]snapshotSchema.Repository
 
 	resp, _ := c.ESClient.Snapshot.GetRepository(c.ESClient.Snapshot.GetRepository.WithRepository(repositoryID))
 
-	util.ConvertJSONtoMetadata(resp.Body, &snapshotRepositoryMetadata)
+	util.ConvertJSONtoMetadata(resp.Body, &repositories)
 
-	return snapshotRepositoryMetadata[repositoryID]
+	return repositories[repositoryID]
 }
 
-func (c Client) GetSnapshotSnapshotsMetadata(repositoryID string, snapshotID string) schema.SnapshotSnapshotsMetadata {
-	var snapshotSnapshotsMetadata schema.SnapshotSnapshotsMetadata
+func (c Client) GetSnapshot(repositoryID string, snapshotID string) snapshotSchema.Snapshot {
+	var snapshots snapshotSchema.Snapshots
 
 	resp, _ := c.ESClient.Snapshot.Get(repositoryID, []string{snapshotID})
 
-	util.ConvertJSONtoMetadata(resp.Body, &snapshotSnapshotsMetadata)
+	util.ConvertJSONtoMetadata(resp.Body, &snapshots)
 
-	return snapshotSnapshotsMetadata
+	return snapshots.Snapshots[0]
 }
 
 func (c Client) RestoreSnapshot(requestBody string, repositoryName string, snapshotName string) (*esapi.Response, error) {
@@ -118,8 +118,8 @@ func (c Client) RestoreSnapshot(requestBody string, repositoryName string, snaps
 	return resp, err
 }
 
-func (c Client) CatHealth() ([]schema.CatHealthMetadata, error) {
-	var healthMetadata []schema.CatHealthMetadata
+func (c Client) CatHealth() ([]catSchema.Health, error) {
+	var healthMetadata []catSchema.Health
 
 	resp, err := c.ESClient.Cat.Health(
 		c.ESClient.Cat.Health.WithFormat("json"))
@@ -131,8 +131,8 @@ func (c Client) CatHealth() ([]schema.CatHealthMetadata, error) {
 	return healthMetadata, nil
 }
 
-func (c Client) CatIndices(sortKey string) ([]schema.CatIndexMetadata, error) {
-	var indicesMetadata []schema.CatIndexMetadata
+func (c Client) CatIndices(sortKey string) ([]catSchema.Index, error) {
+	var indicesMetadata []catSchema.Index
 
 	if sortKey == constants.EmptyString {
 		sortKey = "index"
@@ -149,8 +149,8 @@ func (c Client) CatIndices(sortKey string) ([]schema.CatIndexMetadata, error) {
 	return indicesMetadata, nil
 }
 
-func (c Client) CatNodes(sortKey string) ([]schema.CatNodeMetadata, error) {
-	var nodesMetadata []schema.CatNodeMetadata
+func (c Client) CatNodes(sortKey string) ([]catSchema.Node, error) {
+	var nodesMetadata []catSchema.Node
 
 	if sortKey == constants.EmptyString {
 		sortKey = "id"
@@ -168,8 +168,8 @@ func (c Client) CatNodes(sortKey string) ([]schema.CatNodeMetadata, error) {
 	return nodesMetadata, nil
 }
 
-func (c Client) CatShards(sortKey string) ([]schema.CatShardMetadata, error) {
-	var shardsMetadata []schema.CatShardMetadata
+func (c Client) CatShards(sortKey string) ([]catSchema.Shard, error) {
+	var shardsMetadata []catSchema.Shard
 
 	if sortKey == constants.EmptyString {
 		sortKey = "index"
@@ -187,7 +187,7 @@ func (c Client) CatShards(sortKey string) ([]schema.CatShardMetadata, error) {
 	return shardsMetadata, nil
 }
 
-func (c Client) GetIndexSetting(indexName, settingName string) error {
+func (c Client) GetIndexSetting(indexName, settingName string) (string, error) {
 	var resp *esapi.Response
 	var err error
 
@@ -199,37 +199,66 @@ func (c Client) GetIndexSetting(indexName, settingName string) error {
 	} else {
 		resp, err = c.ESClient.Indices.GetSettings(
 			c.ESClient.Indices.GetSettings.WithIndex(indexName),
-			c.ESClient.Indices.GetSettings.WithName("index." + settingName),
+			c.ESClient.Indices.GetSettings.WithName("index."+settingName),
 			c.ESClient.Indices.GetSettings.WithPretty(),
 		)
 	}
 
 	if err != nil {
-		return err
+		return constants.EmptyString, err
 	}
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 
-	fmt.Println(buf.String())
-
-	return nil
+	return buf.String(), nil
 }
 
-func (c Client) PutIndexSetting(indexName, requestBody string) error {
-
+func (c Client) PutIndexSetting(indexName, requestBody string) (string, error) {
 	resp, err := c.ESClient.Indices.PutSettings(
 		strings.NewReader(requestBody),
 		c.ESClient.Indices.PutSettings.WithIndex(indexName),
+		c.ESClient.Indices.PutSettings.WithPretty(),
 	)
 
 	if err != nil {
-		return err
+		return constants.EmptyString, err
 	}
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 
-	fmt.Println(buf.String())
+	return buf.String(), nil
+}
 
-	return nil
+func (c Client) GetClusterSetting() (string, error) {
+	var resp *esapi.Response
+	var err error
+
+	resp, err = c.ESClient.Cluster.GetSettings(
+		c.ESClient.Cluster.GetSettings.WithPretty(),
+		c.ESClient.Cluster.GetSettings.WithIncludeDefaults(true))
+
+	if err != nil {
+		return constants.EmptyString, err
+	}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+
+	return buf.String(), nil
+}
+
+func (c Client) PutClusterSetting(requestBody string) (string, error) {
+	resp, err := c.ESClient.Cluster.PutSettings(
+		strings.NewReader(requestBody),
+		c.ESClient.Cluster.PutSettings.WithPretty(),
+	)
+
+	if err != nil {
+		return constants.EmptyString, err
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+
+	return buf.String(), nil
 }

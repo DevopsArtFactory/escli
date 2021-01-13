@@ -24,9 +24,12 @@ const (
 )
 
 const (
-	GetSetting = 1
-	GetSettingWithName = 2
-	PutSetting = 3
+	GetIndexSetting         = 1
+	GetIndexSettingWithName = 2
+	PutIndexSetting         = 3
+
+	GetClusterSetting = 0
+	PutClusterSetting = 3
 )
 
 var (

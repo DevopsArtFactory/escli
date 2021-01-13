@@ -17,9 +17,9 @@ limitations under the license.
 package cmd
 
 import (
-	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
 	"github.com/spf13/cobra"
 
+	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
 	"github.com/DevopsArtFactory/escli/cmd/cmd/snapshot"
 )
 
