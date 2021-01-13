@@ -18,12 +18,12 @@ package cat
 
 import (
 	"context"
-	"github.com/DevopsArtFactory/escli/internal/executor"
 	"io"
 
 	"github.com/spf13/cobra"
 
 	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
+	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
 func NewCatShardsCommand() *cobra.Command {

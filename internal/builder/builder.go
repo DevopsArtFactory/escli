@@ -26,12 +26,12 @@ import (
 )
 
 type Flags struct {
-	Region       string `json:"region"`
 	Force        bool   `json:"force"`
 	TroubledOnly bool   `json:"troubled-only"`
-	SortBy       string `json:"sort-by"`
 	RepoOnly     bool   `json:"repo-only"`
 	WithRepo     string `json:"with-repo"`
+	Region       string `json:"region"`
+	SortBy       string `json:"sort-by"`
 }
 
 func ParseFlags() (*Flags, error) {

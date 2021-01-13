@@ -29,12 +29,11 @@ GCP_PROJECT ?= escli
 SUPPORTED_PLATFORMS = linux-amd64 darwin-amd64 windows-amd64.exe linux-arm64
 BUILD_PACKAGE = $(REPOPATH)/$(COMMAND_PKG)
 
-escli_TEST_PACKAGES = ./pkg/... ./cmd/... ./hack/...
+escli_TEST_PACKAGES = ./cmd/...
 GO_FILES = $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./pkg/diag/*")
 
-VERSION_PACKAGE = $(REPOPATH)/pkg/version
+VERSION_PACKAGE = $(REPOPATH)/internal/version
 COMMIT = $(shell git rev-parse HEAD)
-TEST_PACKAGES = ./pkg/... ./hack/...
 
 ifeq "$(strip $(VERSION))" ""
  override VERSION = $(shell git describe --always --tags --dirty)
@@ -99,7 +98,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 .PHONY: release
-release: clean format linters test permission cross $(BUILD_DIR)/VERSION upload-only
+release: clean format linters permission cross $(BUILD_DIR)/VERSION upload-only
 
 .PHONY: build
 build: format cross $(BUILD_DIR)/VERSION

@@ -14,8 +14,9 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package schema
+package cluster
 
-type IndexIndexSettingsRequestBody struct {
-	Index map[string]string `json:"index"`
+type RequestBody struct {
+	Persistent map[string]string `json:"persistent,omitempty"`
+	Transient  map[string]string `json:"transient,omitempty"`
 }

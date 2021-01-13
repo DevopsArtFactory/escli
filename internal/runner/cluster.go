@@ -17,22 +17,48 @@ limitations under the license.
 package runner
 
 import (
+	"encoding/json"
 	"errors"
-	"github.com/DevopsArtFactory/escli/internal/constants"
+	"fmt"
 	"io"
+
+	"github.com/DevopsArtFactory/escli/internal/constants"
+	clusterSchema "github.com/DevopsArtFactory/escli/internal/schema/cluster"
 )
 
 func (r Runner) ClusterSettings(out io.Writer, args []string) error {
+	var resp string
+	var err error
+
 	switch len(args) {
-	case constants.GetSetting:
-		return r.Client.GetIndexSetting(args[0], "")
-	case constants.GetSettingWithName:
-		return r.Client.GetIndexSetting(args[0], args[1])
-	case constants.PutSetting:
-		r.Client.GetIndexSetting(args[0], args[1])
+	case constants.GetClusterSetting:
+		resp, err = r.Client.GetClusterSetting()
+	case constants.PutClusterSetting:
+		requestBody, _ := json.Marshal(composeClusterRequestBody(args))
+		resp, err = r.Client.PutClusterSetting(string(requestBody))
 	default:
-		errors.New("arguments must be 2 or 3")
+		return errors.New("arguments must be 0 or 3")
 	}
 
-	return nil
+	fmt.Fprintf(out, "%s\n", resp)
+	return err
+}
+
+func composeClusterRequestBody(args []string) clusterSchema.RequestBody {
+	switch args[0] {
+	case "persistent":
+		return clusterSchema.RequestBody{
+			Persistent: map[string]string{
+				args[1]: args[2],
+			},
+		}
+	case "transient":
+		return clusterSchema.RequestBody{
+			Transient: map[string]string{
+				args[1]: args[2],
+			},
+		}
+	default:
+		return clusterSchema.RequestBody{}
+	}
 }

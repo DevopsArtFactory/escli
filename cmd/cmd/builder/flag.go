@@ -17,7 +17,6 @@ limitations under the license.
 package builder
 
 import (
-	"github.com/DevopsArtFactory/escli/internal/constants"
 	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,6 +24,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	"github.com/DevopsArtFactory/escli/internal/constants"
 	"github.com/DevopsArtFactory/escli/internal/util"
 )
 
@@ -49,7 +49,7 @@ var FlagRegistry = []Flag{
 		Value:         aws.Bool(false),
 		DefValue:      false,
 		FlagAddMethod: "BoolVar",
-		DefinedOn:     []string{
+		DefinedOn: []string{
 			"snapshot restore [repositoryID] [snapshotID] [indexName]",
 			"snapshot create",
 			"snapshot delete",
@@ -94,7 +94,7 @@ var FlagRegistry = []Flag{
 		Value:         aws.String(constants.EmptyString),
 		DefValue:      constants.EmptyString,
 		FlagAddMethod: "StringVar",
-		DefinedOn:     []string{
+		DefinedOn: []string{
 			"snapshot restore [repositoryID] [snapshotID] [indexName]",
 			"snapshot archive [repositoryID] [snapshotID]"},
 	},

@@ -14,9 +14,9 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package schema
+package cats
 
-type CatHealthMetadata struct {
+type Health struct {
 	Cluster             string `json:"cluster"`
 	Status              string `json:"status"`
 	NodeTotal           string `json:"node.total"`
@@ -26,7 +26,7 @@ type CatHealthMetadata struct {
 	ActiveShardsPercent string `json:"active_shards_percent"`
 }
 
-type CatIndexMetadata struct {
+type Index struct {
 	Health        string `json:"health"`
 	Status        string `json:"status"`
 	Index         string `json:"Index"`
@@ -36,7 +36,7 @@ type CatIndexMetadata struct {
 	StoreSize     string `json:"store.size"`
 }
 
-type CatNodeMetadata struct {
+type Node struct {
 	IP              string `json:"ip"`
 	NodeRole        string `json:"node.role"`
 	Name            string `json:"name"`
@@ -47,19 +47,19 @@ type CatNodeMetadata struct {
 	Uptime          string `json:"uptime"`
 }
 
-type CatShardMetadata struct {
-	Index              string `json:"index"`
-	Shard        string `json:"shard"`
-	PriRep            string `json:"prirep"`
-	State string `json:"state"`
-	Docs          string `json:"docs"`
-	Store          string `json:"store"`
-	IP         string `json:"ip"`
-	Node          string `json:"node"`
+type Shard struct {
+	Index            string `json:"index"`
+	Shard            string `json:"shard"`
+	PriRep           string `json:"prirep"`
+	State            string `json:"state"`
+	Docs             string `json:"docs"`
+	Store            string `json:"store"`
+	IP               string `json:"ip"`
+	Node             string `json:"node"`
 	UnassignedReason string `json:"unassigned.reason"`
 }
 
-type CatRepositoryMetadata struct {
+type Repository struct {
 	ID   string `json:"id"`
 	Type string `json:"type"`
 }

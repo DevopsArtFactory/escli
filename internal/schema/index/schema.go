@@ -14,24 +14,8 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package cmd
+package index
 
-import (
-	"github.com/spf13/cobra"
-
-	"github.com/DevopsArtFactory/escli/cmd/cmd/index"
-)
-
-func NewIndexCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "index",
-		Short: "get or set settings for index",
-		Long:  "get or set settings for index",
-	}
-
-	indexSettingsCommand := index.NewIndexSettingsCommand()
-
-	cmd.AddCommand(indexSettingsCommand)
-
-	return cmd
+type RequestBody struct {
+	Index map[string]string `json:"index"`
 }

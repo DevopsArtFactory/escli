@@ -25,7 +25,7 @@ import (
 	"github.com/enescakir/emoji"
 	"github.com/fatih/color"
 
-	"github.com/DevopsArtFactory/escli/internal/schema"
+	catSchema "github.com/DevopsArtFactory/escli/internal/schema/cat"
 	"github.com/DevopsArtFactory/escli/internal/util"
 )
 
@@ -44,10 +44,10 @@ func (r Runner) DiagCluster(out io.Writer) error {
 	}
 
 	fmt.Fprintf(out, "check yellow status indices....................")
-	printIndicesByHealth(out, indexMetadata, "yellow", false)
+	printIndicesByHealth(out, indexMetadata, "yellow")
 
 	fmt.Fprintf(out, "check red status indices.......................")
-	printIndicesByHealth(out, indexMetadata, "red", false)
+	printIndicesByHealth(out, indexMetadata, "red")
 
 	// Check role of nodes
 	fmt.Fprintf(out, "check number of master nodes...................")
@@ -62,21 +62,20 @@ func (r Runner) DiagCluster(out io.Writer) error {
 	// Check role of nodes
 	fmt.Fprintf(out, "check maximum disk used percent of nodes.......")
 
-	checkDiskUsedPercentOfNodes(out, nodeMetadata, false)
+	checkDiskUsedPercentOfNodes(out, nodeMetadata)
 
 	return nil
 }
 
-func printStatusByHealth(out io.Writer, healthMetadata schema.CatHealthMetadata) {
-	if healthMetadata.Status != "green" {
-		fmt.Fprintf(out, "[%s] %v\n", util.StringWithColor(healthMetadata.Status), emoji.FaceScreamingInFear)
+func printStatusByHealth(out io.Writer, health catSchema.Health) {
+	if health.Status != "green" {
+		fmt.Fprintf(out, "[%s] %v\n", util.StringWithColor(health.Status), emoji.FaceScreamingInFear)
 	} else {
-		fmt.Fprintf(out, "[%s] %v\n", util.StringWithColor(healthMetadata.Status), emoji.SmilingFaceWithSunglasses)
+		fmt.Fprintf(out, "[%s] %v\n", util.StringWithColor(health.Status), emoji.SmilingFaceWithSunglasses)
 	}
-
 }
 
-func checkDiskUsedPercentOfNodes(out io.Writer, nodeMetadata []schema.CatNodeMetadata, detailed bool) {
+func checkDiskUsedPercentOfNodes(out io.Writer, nodeMetadata []catSchema.Node) {
 	maximumDiskUsedPercent := 0.0
 	for _, v := range nodeMetadata {
 		diskUsedPercent, _ := strconv.ParseFloat(v.DiskUsedPercent, 64)
@@ -87,7 +86,7 @@ func checkDiskUsedPercentOfNodes(out io.Writer, nodeMetadata []schema.CatNodeMet
 	fmt.Fprintf(out, "[%s]\n", util.FloatWithColor(maximumDiskUsedPercent))
 }
 
-func checkNumberOfMasterNodes(out io.Writer, nodeMetadata []schema.CatNodeMetadata) {
+func checkNumberOfMasterNodes(out io.Writer, nodeMetadata []catSchema.Node) {
 	numberOfMasterNodes := 0
 	for _, v := range nodeMetadata {
 		if strings.Contains(v.NodeRole, "m") {
@@ -105,7 +104,7 @@ func checkNumberOfMasterNodes(out io.Writer, nodeMetadata []schema.CatNodeMetada
 	}
 }
 
-func printIndicesByHealth(out io.Writer, indexMetadata []schema.CatIndexMetadata, health string, detailed bool) {
+func printIndicesByHealth(out io.Writer, indexMetadata []catSchema.Index, health string) {
 	numberOfTroubledIndices := 0
 	for _, v := range indexMetadata {
 		if v.Health == health {
@@ -114,9 +113,7 @@ func printIndicesByHealth(out io.Writer, indexMetadata []schema.CatIndexMetadata
 	}
 	if numberOfTroubledIndices > 0 {
 		fmt.Fprintf(out, "[%s] %v\n", util.IntWithColor(numberOfTroubledIndices, "red"), emoji.FaceScreamingInFear)
-		if !detailed {
-			fmt.Fprintf(out, "%v check more information by %s\n", emoji.ExclamationMark, util.StringWithColor("escli cat indices"))
-		}
+		fmt.Fprintf(out, "%v check more information by %s\n", emoji.ExclamationMark, util.StringWithColor("escli cat indices"))
 	} else {
 		fmt.Fprintf(out, "[%s] %v\n", util.IntWithColor(numberOfTroubledIndices, "green"), emoji.SmilingFaceWithSunglasses)
 	}

@@ -18,9 +18,10 @@ package runner
 
 import (
 	"fmt"
-	"github.com/DevopsArtFactory/escli/internal/util"
 	"io"
 	"reflect"
+
+	"github.com/DevopsArtFactory/escli/internal/util"
 )
 
 func (r Runner) CatHealth(out io.Writer) error {
@@ -50,7 +51,7 @@ func (r Runner) CatIndices(out io.Writer) error {
 		return err
 	}
 
-	fmt.Fprintf(out,"%-50s\t%s\t%s\t%s\t%s\t%10s\n",
+	fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%10s\n",
 		"index",
 		"health",
 		"status",
@@ -134,7 +135,6 @@ func (r Runner) CatShards(out io.Writer) error {
 			shard.Node,
 			shard.UnassignedReason)
 	}
-
 
 	return nil
 }

@@ -19,29 +19,37 @@ package runner
 import (
 	"encoding/json"
 	"errors"
-	"github.com/DevopsArtFactory/escli/internal/constants"
-	"github.com/DevopsArtFactory/escli/internal/schema"
+	"fmt"
 	"io"
+
+	"github.com/DevopsArtFactory/escli/internal/constants"
+	indexSchema "github.com/DevopsArtFactory/escli/internal/schema/index"
 )
 
 func (r Runner) IndexSettings(out io.Writer, args []string) error {
+	var resp string
+	var err error
+
 	switch len(args) {
-	case constants.GetSetting:
-		return r.Client.GetIndexSetting(args[0], "")
-	case constants.GetSettingWithName:
-		return r.Client.GetIndexSetting(args[0], args[1])
-	case constants.PutSetting:
-		requestBody, _ := json.Marshal(
-			schema.IndexIndexSettingsRequestBody{
-				Index: map[string]string{
-					args[1]: args[2],
-				},
-			},
-		)
-		return r.Client.PutIndexSetting(args[0], string(requestBody))
+	case constants.GetIndexSetting:
+		resp, err = r.Client.GetIndexSetting(args[0], "")
+	case constants.GetIndexSettingWithName:
+		resp, err = r.Client.GetIndexSetting(args[0], args[1])
+	case constants.PutIndexSetting:
+		requestBody, _ := json.Marshal(composeIndexRequestBody(args))
+		resp, err = r.Client.PutIndexSetting(args[0], string(requestBody))
 	default:
-		errors.New("arguments must be 2 or 3")
+		return errors.New("arguments must be 1 or 2 or 3")
 	}
 
-	return nil
+	fmt.Fprintf(out, "%s\n", resp)
+	return err
+}
+
+func composeIndexRequestBody(args []string) indexSchema.RequestBody {
+	return indexSchema.RequestBody{
+		Index: map[string]string{
+			args[1]: args[2],
+		},
+	}
 }
