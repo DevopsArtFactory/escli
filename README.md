@@ -19,12 +19,20 @@ $ escli index setting my-index-000001 number_of_replicas 2
 ### Required
 - [elasticsearch](https://elastic.co) version 6.0 or higher
 
-### Install escli binary (TODO)
+### Install escli binary 
+
+#### On MAC
 ```bash
 $ brew tap DevopsArtFactory/escli
 $ brew update
 $ brew install escli 
 ``` 
+
+#### On Linux
+```bash
+$ curl -Lo escli https://escli.s3.ap-northeast-2.amazonaws.com/releases/latest/escli-linux-amd64
+$ sudo install escli /usr/bin
+```
 
 ### initialize escli
 configuration of escli is stored at `~/.escli/config.yaml` file.
