@@ -98,7 +98,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 .PHONY: release
-release: clean format linters permission cross $(BUILD_DIR)/VERSION upload-only
+release: clean format linters cross $(BUILD_DIR)/VERSION upload-only
 
 .PHONY: build
 build: format cross $(BUILD_DIR)/VERSION
