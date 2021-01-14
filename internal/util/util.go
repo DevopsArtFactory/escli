@@ -178,3 +178,8 @@ func responseBodyToString(closer io.Reader) string {
 	buf.ReadFrom(closer)
 	return buf.String()
 }
+
+func JSONtoPrettyString(v interface{}) (string, error) {
+	jsonPrettyString, err := json.MarshalIndent(v, "", "\t")
+	return string(jsonPrettyString), err
+}

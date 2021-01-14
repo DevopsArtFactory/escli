@@ -19,6 +19,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
 	"github.com/DevopsArtFactory/escli/cmd/cmd/index"
 )
 
@@ -32,6 +33,8 @@ func NewIndexCommand() *cobra.Command {
 	indexSettingsCommand := index.NewIndexSettingsCommand()
 
 	cmd.AddCommand(indexSettingsCommand)
+
+	builder.SetCommandFlags(indexSettingsCommand)
 
 	return cmd
 }

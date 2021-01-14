@@ -11,7 +11,7 @@ $ curl -X PUT "localhost:9200/my-index-000001/_settings?pretty" -H 'Content-Type
 ```
 But with escli, you type below command.
 ```bash
-$ escli index setting my-index-000001 number_of_replicas 2
+$ escli index settings my-index-000001 number_of_replicas 2
 ```
 `escli` should be make your elasticsearch experience more powerful.
 
@@ -30,7 +30,7 @@ $ brew install escli
 
 #### On Linux
 ```bash
-$ curl -Lo escli https://escli.s3.ap-northeast-2.amazonaws.com/releases/latest/escli-linux-amd64
+$ curl -Lo escli https://escli.s3.ap-northeast-2.amazonaws.com/escli/releases/latest/escli-linux-amd64
 $ sudo install escli /usr/bin
 ```
 
@@ -40,7 +40,7 @@ for the first time, there is no configuration so you have to initialize configur
 ```bash
 $ escli init
 ? Your ElasticSearch URL :  http://elasticsearch.domain.com:9200
-? Your AWS Default Region :  ap-northeast-2
+? Your AWS Default Region (If you don't use AWS, type blank) :  ap-northeast-2
 elasticsearchurl: http://elasticsearch.domain.com:9200
 awsregion: ap-northeast-2
 
@@ -142,6 +142,7 @@ elasticsearch-snapshot-standard/indices/z8bqmUmAQxy8tuwSsmFEKg/0/__-urzTmmuR8K6s
 
 #### command list
 | command | description |
+| ------- | ---------------- |
 | index settings | get or set index settings |
 
 #### examples

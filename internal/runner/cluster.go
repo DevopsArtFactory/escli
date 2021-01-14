@@ -17,14 +17,25 @@ limitations under the license.
 package runner
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 
 	"github.com/DevopsArtFactory/escli/internal/constants"
 	clusterSchema "github.com/DevopsArtFactory/escli/internal/schema/cluster"
+	"github.com/DevopsArtFactory/escli/internal/util"
 )
+
+func (r Runner) ClusterReroute(out io.Writer) error {
+	resp, err := r.Client.ClusterReroute()
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(out, "%s\n", resp)
+	return err
+}
 
 func (r Runner) ClusterSettings(out io.Writer, args []string) error {
 	var resp string
@@ -34,8 +45,16 @@ func (r Runner) ClusterSettings(out io.Writer, args []string) error {
 	case constants.GetClusterSetting:
 		resp, err = r.Client.GetClusterSetting()
 	case constants.PutClusterSetting:
-		requestBody, _ := json.Marshal(composeClusterRequestBody(args))
-		resp, err = r.Client.PutClusterSetting(string(requestBody))
+		requestBody, _ := util.JSONtoPrettyString(composeClusterRequestBody(args))
+		fmt.Fprintf(out, "%s\n", util.YellowString(requestBody))
+
+		if !r.Flag.Force {
+			if err := util.AskContinue("Are you sure to update settings of cluster"); err != nil {
+				return errors.New("task has benn canceled")
+			}
+		}
+
+		resp, err = r.Client.PutClusterSetting(requestBody)
 	default:
 		return errors.New("arguments must be 0 or 3")
 	}

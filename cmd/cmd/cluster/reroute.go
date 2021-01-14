@@ -14,7 +14,7 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package snapshot
+package cluster
 
 import (
 	"context"
@@ -26,14 +26,14 @@ import (
 	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
-func NewSnapshotDeleteCommand() *cobra.Command {
-	return builder.NewCmd("delete [repositoryID] [snapshotID]").
-		WithDescription("delete snapshot for indices").
-		ExactArgs(2, funcSnapshotDelete)
+func NewClusterRerouteCommand() *cobra.Command {
+	return builder.NewCmd("reroute").
+		WithDescription("reroute shards of cluster").
+		NoArgs(funcClusterReroute)
 }
 
-func funcSnapshotDelete(ctx context.Context, out io.Writer, args []string) error {
+func funcClusterReroute(ctx context.Context, out io.Writer) error {
 	return executor.RunExecutor(ctx, func(executor executor.Executor) error {
-		return executor.Runner.DeleteSnapshot(out, args)
+		return executor.Runner.ClusterReroute(out)
 	})
 }
