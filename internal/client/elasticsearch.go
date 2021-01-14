@@ -262,3 +262,17 @@ func (c Client) PutClusterSetting(requestBody string) (string, error) {
 
 	return buf.String(), nil
 }
+
+func (c Client) ClusterReroute() (string, error) {
+	resp, err := c.ESClient.Cluster.Reroute(
+		c.ESClient.Cluster.Reroute.WithRetryFailed(true))
+
+	if err != nil {
+		return constants.EmptyString, err
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+
+	return buf.String(), nil
+}

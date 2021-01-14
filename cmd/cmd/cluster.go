@@ -19,6 +19,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
 	"github.com/DevopsArtFactory/escli/cmd/cmd/cluster"
 )
 
@@ -30,8 +31,12 @@ func NewClusterCommand() *cobra.Command {
 	}
 
 	clusterSettingsCommand := cluster.NewClusterSettingsCommand()
+	clusterRerouteCommand := cluster.NewClusterRerouteCommand()
 
 	cmd.AddCommand(clusterSettingsCommand)
+	cmd.AddCommand(clusterRerouteCommand)
+
+	builder.SetCommandFlags(clusterSettingsCommand)
 
 	return cmd
 }

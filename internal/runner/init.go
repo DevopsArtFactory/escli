@@ -31,7 +31,7 @@ import (
 )
 
 func (r Runner) InitConfiguration() error {
-	if util.FileExists(constants.BaseFilePath) {
+	if util.FileExists(constants.BaseFilePath) && r.Flag.Force {
 		return fmt.Errorf("you already had configuration file: %s", constants.BaseFilePath)
 	}
 
@@ -96,13 +96,9 @@ func AskElasticSearchURL() (string, error) {
 func AskAWSRegion() (string, error) {
 	var region string
 	prompt := &survey.Input{
-		Message: "Your AWS Default Region : ",
+		Message: "Your AWS Default Region (If you don't use AWS, type blank) : ",
 	}
 	survey.AskOne(prompt, &region)
-
-	if len(region) == 0 {
-		return region, errors.New("input aws default region has been canceled")
-	}
 
 	return region, nil
 }

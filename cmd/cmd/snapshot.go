@@ -48,9 +48,11 @@ func NewSnapshotCommand() *cobra.Command {
 
 	cmd.AddCommand(snapshotCreateCommand)
 	builder.SetCommandExample(snapshotCreateCommand)
+	builder.SetCommandFlags(snapshotCreateCommand)
 
 	cmd.AddCommand(snapshotDeleteCommand)
-	builder.SetCommandExample(snapshotRestoreCommand)
+	builder.SetCommandExample(snapshotDeleteCommand)
+	builder.SetCommandFlags(snapshotDeleteCommand)
 
 	return cmd
 }

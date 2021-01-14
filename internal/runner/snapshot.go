@@ -73,16 +73,24 @@ func (r Runner) CreateSnapshot(out io.Writer, args []string) error {
 	snapshotID := args[1]
 	indices := args[2]
 
-	requestBody, err := json.Marshal(
+	requestBody, err := util.JSONtoPrettyString(
 		snapshotSchema.RequestBody{
 			Indices: indices,
-		},
-	)
+		})
+
 	if err != nil {
 		return err
 	}
 
-	statusCode, err := r.Client.CreateSnapshot(repositoryID, snapshotID, string(requestBody))
+	fmt.Fprintf(out, "%s\n", util.YellowString(requestBody))
+
+	if !r.Flag.Force {
+		if err := util.AskContinue("Are you sure to create snapshot"); err != nil {
+			return errors.New("task has benn canceled")
+		}
+	}
+
+	statusCode, err := r.Client.CreateSnapshot(repositoryID, snapshotID, requestBody)
 	switch statusCode {
 	case 200:
 		fmt.Fprintf(out, "%s\n", util.GreenString(snapshotID+" is created"))
@@ -96,6 +104,12 @@ func (r Runner) CreateSnapshot(out io.Writer, args []string) error {
 func (r Runner) DeleteSnapshot(out io.Writer, args []string) error {
 	repositoryID := args[0]
 	snapshotID := args[1]
+
+	if !r.Flag.Force {
+		if err := util.AskContinue("Are you sure to delete snapshot"); err != nil {
+			return errors.New("task has benn canceled")
+		}
+	}
 
 	statusCode, err := r.Client.DeleteSnapshot(repositoryID, snapshotID)
 	switch statusCode {

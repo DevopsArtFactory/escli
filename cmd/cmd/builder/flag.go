@@ -51,9 +51,12 @@ var FlagRegistry = []Flag{
 		FlagAddMethod: "BoolVar",
 		DefinedOn: []string{
 			"snapshot restore [repositoryID] [snapshotID] [indexName]",
-			"snapshot create",
-			"snapshot delete",
-			"snapshot archive [repositoryID] [snapshotID]"},
+			"snapshot create [repositoryID] [snapshotID] [indices]",
+			"snapshot delete [repositoryID] [snapshotID]",
+			"snapshot archive [repositoryID] [snapshotID]",
+			"index settings",
+			"cluster settings",
+		},
 	},
 	{
 		Name:          "troubled-only",

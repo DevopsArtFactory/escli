@@ -17,13 +17,13 @@ limitations under the license.
 package runner
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 
 	"github.com/DevopsArtFactory/escli/internal/constants"
 	indexSchema "github.com/DevopsArtFactory/escli/internal/schema/index"
+	"github.com/DevopsArtFactory/escli/internal/util"
 )
 
 func (r Runner) IndexSettings(out io.Writer, args []string) error {
@@ -36,8 +36,16 @@ func (r Runner) IndexSettings(out io.Writer, args []string) error {
 	case constants.GetIndexSettingWithName:
 		resp, err = r.Client.GetIndexSetting(args[0], args[1])
 	case constants.PutIndexSetting:
-		requestBody, _ := json.Marshal(composeIndexRequestBody(args))
-		resp, err = r.Client.PutIndexSetting(args[0], string(requestBody))
+		requestBody, _ := util.JSONtoPrettyString(composeIndexRequestBody(args))
+		fmt.Fprintf(out, "%s\n", util.YellowString(requestBody))
+
+		if !r.Flag.Force {
+			if err := util.AskContinue("Are you sure to update settings of index"); err != nil {
+				return errors.New("task has benn canceled")
+			}
+		}
+
+		resp, err = r.Client.PutIndexSetting(args[0], requestBody)
 	default:
 		return errors.New("arguments must be 1 or 2 or 3")
 	}

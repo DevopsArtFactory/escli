@@ -29,7 +29,6 @@ import (
 func NewSnapshotListCommand() *cobra.Command {
 	return builder.NewCmd("list").
 		WithDescription("listing repository and snapshots").
-		WithLongDescription("abc").
 		NoArgs(funcSnapshotList)
 }
 
