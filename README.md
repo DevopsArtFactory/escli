@@ -15,6 +15,9 @@ $ escli index settings my-index-000001 number_of_replicas 2
 ```
 `escli` should be make your elasticsearch experience more powerful.
 
+## Release Note 
+Release Note is [Here](RELEASENOTE.md)
+
 ## Installation
 ### Required
 - [elasticsearch](https://elastic.co) version 6.0 or higher
@@ -191,6 +194,7 @@ $ escli index settings send-mail-result-prod-2021-01-12 number_of_replicas 2    
 
 #### command list
 | command | description |
+| ------- | ----------- |
 | cluster settings | get or set index settings |
 
 #### examples
