@@ -42,29 +42,35 @@ func (r Runner) ListSnapshot(out io.Writer) error {
 		return err
 	}
 
-	for _, repository := range repositories {
-		if r.Flag.WithRepo == repository.ID || r.Flag.WithRepo == constants.EmptyString {
-			fmt.Fprintf(out, "Repository ID : %s\n", util.StringWithColor(repository.ID))
+	for repositoryID, repositorySetting := range repositories {
+		if r.Flag.WithRepo == repositoryID || r.Flag.WithRepo == constants.EmptyString {
+			fmt.Fprintf(out, "Repository ID : %s\n", util.StringWithColor(repositoryID))
+			fmt.Fprintf(out, "Type : %s\n", repositorySetting.Type)
 		}
-		if !r.Flag.RepoOnly {
-			if r.Flag.WithRepo == repository.ID || r.Flag.WithRepo == constants.EmptyString {
-				snapshotsMetadata, err := r.Client.GetSnapshots(repository.ID)
-				if err != nil {
-					continue
-				}
+		if r.Flag.RepoOnly {
+			prettyJSON, err := json.MarshalIndent(repositorySetting.Settings, " ", "  ")
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(out, "Setting : %s\n\n", string(prettyJSON))
+		} else if r.Flag.WithRepo == repositoryID || r.Flag.WithRepo == constants.EmptyString {
+			snapshotsMetadata, err := r.Client.GetSnapshots(repositoryID)
+			if err != nil {
+				continue
+			}
+			fmt.Fprintf(out, "%-50s\t%s\n",
+				"ID",
+				"state")
+			for _, snapshot := range snapshotsMetadata.Snapshots {
 				fmt.Fprintf(out, "%-50s\t%s\n",
-					"ID",
-					"state")
-				for _, snapshot := range snapshotsMetadata.Snapshots {
-					fmt.Fprintf(out, "%-50s\t%s\n",
-						snapshot.Snapshot,
-						util.StringWithColor(snapshot.State))
-					fmt.Fprintf(out, "%s\n",
-						snapshot.Indices)
-				}
+					snapshot.Snapshot,
+					util.StringWithColor(snapshot.State))
+				fmt.Fprintf(out, "%s\n",
+					snapshot.Indices)
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -144,9 +150,17 @@ func (r Runner) ArchiveSnapshot(out io.Writer, args []string) error {
 
 	snapshot := r.Client.GetSnapshot(repositoryID, snapshotID)
 
+	var basePath string
+
+	if repository.Settings.BasePath == constants.EmptyString {
+		basePath = constants.EmptyString
+	} else {
+		basePath = repository.Settings.BasePath + "/"
+	}
+
 	snapshotsIndicesS3, err := r.getIndexIDFromS3(
 		aws.String(repository.Settings.Bucket),
-		aws.String(repository.Settings.BasePath+"/"),
+		aws.String(basePath),
 	)
 
 	if err != nil {
@@ -156,7 +170,7 @@ func (r Runner) ArchiveSnapshot(out io.Writer, args []string) error {
 	for _, indexName := range snapshot.Indices {
 		fmt.Fprintf(out, "index name : %s\n", util.StringWithColor(indexName))
 		metaData := snapshotsIndicesS3.Indices[indexName]
-		prefix := repository.Settings.BasePath + "/indices/" + metaData.ID + "/"
+		prefix := basePath + "indices/" + metaData.ID + "/"
 
 		objs, _ := r.Client.GetObjects(aws.String(repository.Settings.Bucket), aws.String(prefix), nil, nil)
 
@@ -216,7 +230,7 @@ func (r Runner) getIndexIDFromS3(bucket *string, prefix *string) (*snapshotSchem
 	for _, item := range resp.Contents {
 		if strings.Contains(*item.Key, "index-") {
 			currentKeyNumber := util.ParseInt(re.FindString(*item.Key))
-			if currentKeyNumber > keyNumber {
+			if currentKeyNumber >= keyNumber {
 				keyNumber = currentKeyNumber
 				snapshotMetadataKey = *item.Key
 			}
@@ -248,9 +262,17 @@ func (r Runner) RestoreSnapshot(out io.Writer, args []string) error {
 		fmt.Fprintf(out, "bucket name : %s\n", util.StringWithColor(repository.Settings.Bucket))
 		fmt.Fprintf(out, "base path : %s\n", util.StringWithColor(repository.Settings.BasePath))
 
+		var basePath string
+
+		if repository.Settings.BasePath == constants.EmptyString {
+			basePath = constants.EmptyString
+		} else {
+			basePath = repository.Settings.BasePath + "/"
+		}
+
 		snapshotsIndicesS3, err := r.getIndexIDFromS3(
 			aws.String(repository.Settings.Bucket),
-			aws.String(repository.Settings.BasePath+"/"),
+			aws.String(basePath),
 		)
 
 		if err != nil {

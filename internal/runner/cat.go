@@ -51,24 +51,30 @@ func (r Runner) CatIndices(out io.Writer) error {
 		return err
 	}
 
-	fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%10s\n",
+	fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%10s\t%15s\t%15s\t%20s\n",
 		"index",
 		"health",
 		"status",
 		"pri",
 		"rep",
-		"store.size")
+		"docs.count",
+		"docs.deleted",
+		"store.size",
+		"pri.store.size")
 	for _, index := range indicesMetadata {
 		if r.Flag.TroubledOnly && index.Health == "green" {
 			continue
 		}
-		fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%10s\n",
+		fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%10s\t%15s\t%15s\t%20s\n",
 			index.Index,
 			util.StringWithColor(index.Health),
 			index.Status,
 			index.PrimaryShards,
 			index.ReplicaShards,
-			index.StoreSize)
+			index.DocsCount,
+			index.DocsDeleted,
+			index.StoreSize,
+			index.PriStoreSize)
 	}
 
 	return nil
@@ -110,7 +116,7 @@ func (r Runner) CatShards(out io.Writer) error {
 		return err
 	}
 
-	fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+	fmt.Fprintf(out, "%-50s\t%s\t%s\t%10s\t%10s\t%10s\t%10s\t%10s\t%s\n",
 		"index",
 		"shard",
 		"prirep",
@@ -124,7 +130,7 @@ func (r Runner) CatShards(out io.Writer) error {
 		if r.Flag.TroubledOnly && shard.State == "STARTED" {
 			continue
 		}
-		fmt.Fprintf(out, "%-50s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+		fmt.Fprintf(out, "%-50s\t%s\t%s\t%10s\t%10s\t%10s\t%10s\t%10s\t%s\n",
 			shard.Index,
 			shard.Shard,
 			shard.PriRep,
