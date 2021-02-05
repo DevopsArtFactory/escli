@@ -56,6 +56,7 @@ var FlagRegistry = []Flag{
 			"snapshot archive [repositoryID] [snapshotID]",
 			"index settings",
 			"cluster settings",
+			"index delete",
 		},
 	},
 	{

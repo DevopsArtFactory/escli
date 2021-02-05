@@ -46,6 +46,7 @@ func NewRootCommand(out, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(NewDiagCommand())
 	rootCmd.AddCommand(NewIndexCommand())
 	rootCmd.AddCommand(NewClusterCommand())
+	rootCmd.AddCommand(NewUpdateCommand())
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
 

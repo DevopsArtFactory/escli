@@ -40,11 +40,19 @@ func GetESClientFn(elasticSearchURL string) *elasticsearch.Client {
 	return es
 }
 
-func (c Client) GetRepositories() ([]catSchema.Repository, error) {
-	var repositories []catSchema.Repository
+func (c Client) GetRepositories() (map[string]snapshotSchema.Repository, error) {
+	//var repositories []catSchema.Repository
+	var repositories map[string]snapshotSchema.Repository
 
-	resp, err := c.ESClient.Cat.Repositories(
-		c.ESClient.Cat.Repositories.WithFormat("json"))
+	/*
+		resp, err := c.ESClient.Cat.Repositories(
+			c.ESClient.Cat.Repositories.WithFormat("json"))
+		if err != nil {
+			return nil, err
+		}
+	*/
+
+	resp, err := c.ESClient.Snapshot.GetRepository()
 	if err != nil {
 		return nil, err
 	}
@@ -266,6 +274,21 @@ func (c Client) PutClusterSetting(requestBody string) (string, error) {
 func (c Client) ClusterReroute() (string, error) {
 	resp, err := c.ESClient.Cluster.Reroute(
 		c.ESClient.Cluster.Reroute.WithRetryFailed(true))
+
+	if err != nil {
+		return constants.EmptyString, err
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+
+	return buf.String(), nil
+}
+
+func (c Client) DeleteIndex(indices []string) (string, error) {
+	resp, err := c.ESClient.Indices.Delete(
+		indices,
+	)
 
 	if err != nil {
 		return constants.EmptyString, err

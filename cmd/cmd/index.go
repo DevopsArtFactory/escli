@@ -31,10 +31,13 @@ func NewIndexCommand() *cobra.Command {
 	}
 
 	indexSettingsCommand := index.NewIndexSettingsCommand()
+	indexDeleteCommand := index.NewIndexDeleteCommand()
 
 	cmd.AddCommand(indexSettingsCommand)
+	cmd.AddCommand(indexDeleteCommand)
 
 	builder.SetCommandFlags(indexSettingsCommand)
+	builder.SetCommandFlags(indexDeleteCommand)
 
 	return cmd
 }

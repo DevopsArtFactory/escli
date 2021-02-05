@@ -59,10 +59,12 @@ func (r Runner) DiagCluster(out io.Writer) error {
 
 	checkNumberOfMasterNodes(out, nodeMetadata)
 
-	// Check role of nodes
-	fmt.Fprintf(out, "check maximum disk used percent of nodes.......")
+	// Check disk usage of nodes
+	fmt.Fprintf(out, "check minimum disk used percent od data node...")
+	checkMinimumDiskUsedPercentOfNodes(out, nodeMetadata)
 
-	checkDiskUsedPercentOfNodes(out, nodeMetadata)
+	fmt.Fprintf(out, "check maximum disk used percent of data node...")
+	checkMaximumDiskUsedPercentOfNodes(out, nodeMetadata)
 
 	return nil
 }
@@ -75,12 +77,27 @@ func printStatusByHealth(out io.Writer, health catSchema.Health) {
 	}
 }
 
-func checkDiskUsedPercentOfNodes(out io.Writer, nodeMetadata []catSchema.Node) {
+func checkMinimumDiskUsedPercentOfNodes(out io.Writer, nodeMetadata []catSchema.Node) {
+	minimumDiskUsedPercent := 100.0
+	for _, v := range nodeMetadata {
+		if strings.Contains(v.NodeRole, "d") {
+			diskUsedPercent, _ := strconv.ParseFloat(v.DiskUsedPercent, 64)
+			if diskUsedPercent <= minimumDiskUsedPercent {
+				minimumDiskUsedPercent = diskUsedPercent
+			}
+		}
+	}
+	fmt.Fprintf(out, "[%s]\n", util.FloatWithColor(minimumDiskUsedPercent))
+}
+
+func checkMaximumDiskUsedPercentOfNodes(out io.Writer, nodeMetadata []catSchema.Node) {
 	maximumDiskUsedPercent := 0.0
 	for _, v := range nodeMetadata {
-		diskUsedPercent, _ := strconv.ParseFloat(v.DiskUsedPercent, 64)
-		if diskUsedPercent >= maximumDiskUsedPercent {
-			maximumDiskUsedPercent = diskUsedPercent
+		if strings.Contains(v.NodeRole, "d") {
+			diskUsedPercent, _ := strconv.ParseFloat(v.DiskUsedPercent, 64)
+			if diskUsedPercent >= maximumDiskUsedPercent {
+				maximumDiskUsedPercent = diskUsedPercent
+			}
 		}
 	}
 	fmt.Fprintf(out, "[%s]\n", util.FloatWithColor(maximumDiskUsedPercent))

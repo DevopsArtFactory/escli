@@ -22,7 +22,11 @@ type Health struct {
 	NodeTotal           string `json:"node.total"`
 	NodeData            string `json:"node.data"`
 	Shards              string `json:"shards"`
-	InitShards          string `json:"unassign"`
+	PriShards           string `json:"pri"`
+	ReloShards          string `json:"relo"`
+	InitShards          string `json:"init"`
+	UnassignedShards    string `json:"unassign"`
+	PendingTasks        string `json:"pending_tasks"`
 	ActiveShardsPercent string `json:"active_shards_percent"`
 }
 
@@ -33,7 +37,10 @@ type Index struct {
 	UUID          string `json:"uuid"`
 	PrimaryShards string `json:"pri"`
 	ReplicaShards string `json:"rep"`
+	DocsCount     string `json:"docs.count"`
+	DocsDeleted   string `json:"docs.deleted"`
 	StoreSize     string `json:"store.size"`
+	PriStoreSize  string `json:"pri.store.size"`
 }
 
 type Node struct {

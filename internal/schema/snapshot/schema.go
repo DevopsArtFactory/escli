@@ -50,14 +50,15 @@ type RequestBody struct {
 
 type Repository struct {
 	Type     string             `json:"type"`
-	Settings RepositorySettings `json:"settings"`
+	Settings RepositorySettings `json:"settings,omitempty"`
 }
 
 type RepositorySettings struct {
-	Bucket       string `json:"bucket"`
-	BasePath     string `json:"base_path"`
-	StorageClass string `json:"storage_class"`
-	Region       string `json:"region"`
+	Location     string `json:"location,omitempty"`
+	Bucket       string `json:"bucket,omitempty"`
+	BasePath     string `json:"base_path,omitempty"`
+	StorageClass string `json:"storage_class,omitempty"`
+	Region       string `json:"region,omitempty"`
 }
 
 type SnapshotsIndicesS3 struct {

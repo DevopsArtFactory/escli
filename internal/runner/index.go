@@ -54,6 +54,22 @@ func (r Runner) IndexSettings(out io.Writer, args []string) error {
 	return err
 }
 
+func (r Runner) DeleteIndex(out io.Writer, args []string) error {
+	if !r.Flag.Force {
+		if err := util.AskContinue("Are you sure to delete index"); err != nil {
+			return errors.New("task has benn canceled")
+		}
+	}
+
+	resp, err := r.Client.DeleteIndex(args)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(out, "%s\n", resp)
+	return err
+}
+
 func composeIndexRequestBody(args []string) indexSchema.RequestBody {
 	return indexSchema.RequestBody{
 		Index: map[string]string{
