@@ -18,37 +18,45 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
+	"io/ioutil"
 
 	"github.com/DevopsArtFactory/escli/internal/schema"
 )
 
 func GetConfig() (*schema.Config, error) {
-	viper.SetConfigType("yaml")
-	err := viper.ReadInConfig()
+	var configs []schema.Config
+
+	yamlFile, err := ioutil.ReadFile(viper.GetString("cfgFile"))
+
+	err = yaml.Unmarshal(yamlFile, &configs)
 	if err != nil {
 		return nil, err
 	}
 
-	conf := &schema.Config{}
-	err = viper.Unmarshal(conf)
-	if err != nil {
-		return nil, err
+	profile := viper.Get("profile")
+
+	for _, config := range configs {
+		if config.Profile == profile {
+			return &config, nil
+		}
 	}
 
-	return conf, nil
+	return &configs[0], nil
 }
 
 func GetDefaultConfig() (*schema.Config, error) {
-	conf := &schema.Config{}
+	profile := &schema.Config{}
 
-	return conf, nil
+	return profile, nil
 }
 
-func SetInitConfig(elasticsearchURL string, awsRegion string) schema.Config {
+func SetInitConfig(profile string, elasticsearchURL string, awsRegion string) []schema.Config {
 	config := schema.Config{
+		Profile: profile,
 		ElasticSearchURL: elasticsearchURL,
-		AWSRegion:        awsRegion,
+		AWSRegion: awsRegion,
 	}
 
-	return config
+	return []schema.Config{config}
 }

@@ -27,6 +27,7 @@ import (
 
 var (
 	cfgFile string
+	profile string
 )
 
 func NewRootCommand(out, stderr io.Writer) *cobra.Command {
@@ -47,18 +48,23 @@ func NewRootCommand(out, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(NewIndexCommand())
 	rootCmd.AddCommand(NewClusterCommand())
 	rootCmd.AddCommand(NewUpdateCommand())
+	rootCmd.AddCommand(NewCompletionCommand())
+	rootCmd.AddCommand(NewProfilesCommand())
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
+	rootCmd.PersistentFlags().StringVar(&profile, "profile", "", "profile")
 
 	return rootCmd
 }
 
 func initConfig() {
 	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
+		viper.Set("cfgFile", cfgFile)
 	} else {
-		viper.SetConfigFile(constants.BaseFilePath)
+		viper.Set("cfgFile", constants.BaseFilePath)
 	}
+
+	viper.Set("profile", profile)
 
 	viper.AutomaticEnv()
 }

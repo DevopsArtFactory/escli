@@ -33,12 +33,12 @@ type Executor struct {
 var NewExecutor = createNewExecutor
 
 func RunExecutor(ctx context.Context, action func(Executor) error) error {
-	c, err := config.GetConfig()
+	p, err := config.GetConfig()
 	if err != nil {
 		return err
 	}
 
-	executor, _ := createNewExecutor(c)
+	executor, _ := createNewExecutor(p)
 
 	err = action(*executor)
 
@@ -46,12 +46,12 @@ func RunExecutor(ctx context.Context, action func(Executor) error) error {
 }
 
 func RunExecutorWithoutCheckingConfig(ctx context.Context, action func(Executor) error) error {
-	c, err := config.GetDefaultConfig()
+	p, err := config.GetDefaultConfig()
 	if err != nil {
 		return err
 	}
 
-	executor, _ := createNewExecutor(c)
+	executor, _ := createNewExecutor(p)
 
 	err = action(*executor)
 

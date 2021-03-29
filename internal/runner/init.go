@@ -42,6 +42,10 @@ func (r Runner) InitConfiguration() error {
 		}
 	}
 
+	profile, err := AskProfile()
+	if err != nil {
+		return err
+	}
 	// Ask base account name which should be a company mail
 	elasticsearchURL, err := AskElasticSearchURL()
 	if err != nil {
@@ -53,7 +57,7 @@ func (r Runner) InitConfiguration() error {
 		return err
 	}
 
-	c := config.SetInitConfig(elasticsearchURL, awsRegion)
+	c := config.SetInitConfig(profile, elasticsearchURL, awsRegion)
 	y, err := yaml.Marshal(c)
 	if err != nil {
 		return err
@@ -78,7 +82,6 @@ func (r Runner) InitConfiguration() error {
 	return nil
 }
 
-// AskBaseAccountName asks user's base account
 func AskElasticSearchURL() (string, error) {
 	var elasticsearchURL string
 	prompt := &survey.Input{
@@ -91,6 +94,20 @@ func AskElasticSearchURL() (string, error) {
 	}
 
 	return elasticsearchURL, nil
+}
+
+func AskProfile() (string, error) {
+	var profile string
+	prompt := &survey.Input{
+		Message: "Your Profile Name : ",
+	}
+	survey.AskOne(prompt, &profile)
+
+	if len(profile) == 0 {
+		return profile, errors.New("input profile name has been canceled")
+	}
+
+	return profile, nil
 }
 
 func AskAWSRegion() (string, error) {

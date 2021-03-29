@@ -17,6 +17,7 @@ limitations under the license.
 package schema
 
 type Config struct {
-	ElasticSearchURL string `yaml:"elasticsearchurl"`
-	AWSRegion        string `yaml:"awsregion"`
+	Profile          string `yaml:"profile"`
+	ElasticSearchURL string `yaml:"elasticsearch_url"`
+	AWSRegion        string `yaml:"aws_region"`
 }

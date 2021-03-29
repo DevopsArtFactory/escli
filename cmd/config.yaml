@@ -1,0 +1,6 @@
+- profile: benx-log
+  elasticsearch_url: "https://es-benx-log-bereapne2.releng.benxdevops.io"
+  aws_region: ap-northeast-2
+- profile: send-mail-result-prod
+  elasticsearch_url: "https://search-send-mail-result-prod-ev6y7gygx273gn5f6lggq7tkqm.us-east-1.es.amazonaws.com"
+  aws_region: us-west-1
