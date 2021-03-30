@@ -31,6 +31,8 @@ import (
 	"github.com/elastic/go-elasticsearch/esapi"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+
+	"github.com/DevopsArtFactory/escli/internal/schema"
 )
 
 func ConvertJSONtoMetadata(r io.Reader, d interface{}) {
@@ -88,6 +90,18 @@ func CreateFile(filePath string, writeData string) error {
 	return nil
 }
 
+func AppendFile(filePath string, writeData string) error {
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if _, err := file.WriteString(writeData); err != nil {
+		return err
+	}
+	return nil
+}
+
 func GreenString(content string) string {
 	return color.GreenString(content)
 }
@@ -98,6 +112,10 @@ func RedString(content string) string {
 
 func YellowString(content string) string {
 	return color.YellowString(content)
+}
+
+func BlueString(content string) string {
+	return color.BlueString(content)
 }
 
 func StringWithColor(content string) string {
@@ -182,4 +200,8 @@ func responseBodyToString(closer io.Reader) string {
 func JSONtoPrettyString(v interface{}) (string, error) {
 	jsonPrettyString, err := json.MarshalIndent(v, "", "\t")
 	return string(jsonPrettyString), err
+}
+
+func RemoveSlice(slice []schema.Config, s int) []schema.Config {
+	return append(slice[:s], slice[s+1:]...)
 }

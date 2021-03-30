@@ -42,7 +42,6 @@ func NewRootCommand(out, stderr io.Writer) *cobra.Command {
 
 	rootCmd.AddCommand(NewSnapshotCommand())
 	rootCmd.AddCommand(NewCatCommand())
-	rootCmd.AddCommand(NewInitCommand())
 	rootCmd.AddCommand(NewVersionCommand())
 	rootCmd.AddCommand(NewDiagCommand())
 	rootCmd.AddCommand(NewIndexCommand())

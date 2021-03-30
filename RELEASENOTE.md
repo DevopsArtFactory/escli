@@ -1,5 +1,12 @@
 # Release Note
 
+## 0.0.4 (2021/03/30)
+- autocomplete is included.
+- `profiles list` command shows all profiles of escli.
+- `profiles add` command add profile to configuration file of escli
+- `profiles remove [profileName]` command remove profile from configuration file of escli
+- `init` command is deprecated.
+ 
 ## 0.0.3 (2021/02/05)
 - `cat health` command shows all things of `_cat/health` API
 - `index delete` command is added. you can delete index that command.

@@ -14,7 +14,7 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package cmd
+package profiles
 
 import (
 	"context"
@@ -26,14 +26,14 @@ import (
 	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
-func NewInitCommand() *cobra.Command {
-	return builder.NewCmd("init").
-		WithDescription("initialize escli configuration").
-		NoArgs(funcInitCommand)
+func NewProfileAddCommand() *cobra.Command {
+	return builder.NewCmd("add").
+		WithDescription("add profile").
+		NoArgs(funcProfileAdd)
 }
 
-func funcInitCommand(ctx context.Context, out io.Writer) error {
+func funcProfileAdd(ctx context.Context, out io.Writer) error {
 	return executor.RunExecutorWithoutCheckingConfig(ctx, func(executor executor.Executor) error {
-		return executor.Runner.InitConfiguration()
+		return executor.Runner.AddProfile(out)
 	})
 }

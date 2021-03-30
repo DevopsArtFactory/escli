@@ -39,20 +39,66 @@ $ sudo install escli /usr/bin
 
 ### initialize escli
 configuration of escli is stored at `~/.escli/config.yaml` file.
-for the first time, there is no configuration so you have to initialize configuration with `escli init`
+for the first time, there is no configuration so you have to initialize configuration with `escli profiles add`
 ```bash
-$ escli init
+$ escli profiles add
+? Your Profile Name :  log-es
 ? Your ElasticSearch URL :  http://elasticsearch.domain.com:9200
 ? Your AWS Default Region (If you don't use AWS, type blank) :  ap-northeast-2
-elasticsearchurl: http://elasticsearch.domain.com:9200
-awsregion: ap-northeast-2
+- profile: log-es
+  elasticsearch_url: http://elasticsearch.domain.com:9200
+  aws_region: ap-northeast-2
 
-? Are you sure to generate configuration file?  y
-New configuration file is successfully generated in /Users/benx/.escli/config.yaml
-
+? Are you sure to add profile to configuration file?  y
+Adding profile to configuration file is successfully in /Users/benx/.escli/config.yaml
 ```
 
 ## How to use
+
+### common options
+* `--profile` : you can specify profile from configuration file. if you don't specify `--profile` option, escli use first profile of configuration file.
+* `--config` : you can specify configuration file. if you don't specify `--config` option, escli use `~/.escli/config.yaml` configuration file.
+
+### `profiles` command
+you can add one more elasticsearch clusters to your configuration file by `profiles` command. and then you can use profile with `--profile` option
+
+#### command list
+| command     | description                                               |
+| ----------- | --------------------------------------------------------- |
+| profiles list | shows profiles.        |
+| profiles add | add profile to configuration file  |
+| profiles remove | remove profile from configuration file    |
+
+#### examples
+
+```bash
+$ escli profiles add
+? Your Profile Name :  service-es
+? Your ElasticSearch URL :  http://search.domain.com:9200
+? Your AWS Default Region (If you don't use AWS, type blank) :  
+- profile: service-es
+  elasticsearch_url: http://search.domain.com:9200
+  aws_region: ""
+
+? Are you sure to add profile to configuration file?  y
+Adding profile to configuration file is successfully in /Users/benx/.escli/config.yaml
+```
+
+```bash
+$ escli profiles list
+Profile           : log-es
+ElasticSearch URL : http://elasticsearch.domain.com:9200
+AWS Region        : ap-northeast-2
+
+Profile           : service-es
+ElasticSearch URL : http://search.domain.com:9200
+AWS Region        : 
+```
+
+```bash
+$ escli cat health --profile log-es
+```
+
 
 ### `cat` command
 
@@ -225,4 +271,17 @@ check yellow status indices....................[0] 😎
 check red status indices.......................[0] 😎
 check number of master nodes...................[3]
 check maximum disk used percent of nodes.......[36]
+```
+
+## Autocompletion
+* zsh
+```bash
+$ echo "source <(escli completion zsh)" >> ~/.zshrc
+$ source  ~/.zshrc
+```
+
+* bash
+```bash
+$ echo "source <(escli completion bash)" >> ~/.bash_rc or ~/.bash_profile
+$ source  ~/.bashrc
 ```

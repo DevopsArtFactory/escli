@@ -14,28 +14,26 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package cmd
+package profiles
 
 import (
+	"context"
+	"io"
+
 	"github.com/spf13/cobra"
 
-	"github.com/DevopsArtFactory/escli/cmd/cmd/profiles"
+	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
+	"github.com/DevopsArtFactory/escli/internal/executor"
 )
 
-func NewProfilesCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "profiles",
-		Short: "manage profiles for escli",
-		Long:  "manage profiles for escli",
-	}
+func NewProfileRemoveCommand() *cobra.Command {
+	return builder.NewCmd("remove").
+		WithDescription("remove profile").
+		ExactArgs(1, funcProfileRemove)
+}
 
-	profilesListCommand := profiles.NewProfileListCommand()
-	profilesAddCommand := profiles.NewProfileAddCommand()
-	profilesRemoveCommand := profiles.NewProfileRemoveCommand()
-
-	cmd.AddCommand(profilesListCommand)
-	cmd.AddCommand(profilesAddCommand)
-	cmd.AddCommand(profilesRemoveCommand)
-
-	return cmd
+func funcProfileRemove(ctx context.Context, out io.Writer, args []string) error {
+	return executor.RunExecutorWithoutCheckingConfig(ctx, func(executor executor.Executor) error {
+		return executor.Runner.RemoveProfile(out, args)
+	})
 }

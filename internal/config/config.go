@@ -17,9 +17,10 @@ limitations under the license.
 package config
 
 import (
+	"io/ioutil"
+
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 
 	"github.com/DevopsArtFactory/escli/internal/schema"
 )
@@ -28,6 +29,9 @@ func GetConfig() (*schema.Config, error) {
 	var configs []schema.Config
 
 	yamlFile, err := ioutil.ReadFile(viper.GetString("cfgFile"))
+	if err != nil {
+		return nil, err
+	}
 
 	err = yaml.Unmarshal(yamlFile, &configs)
 	if err != nil {
@@ -53,9 +57,9 @@ func GetDefaultConfig() (*schema.Config, error) {
 
 func SetInitConfig(profile string, elasticsearchURL string, awsRegion string) []schema.Config {
 	config := schema.Config{
-		Profile: profile,
+		Profile:          profile,
 		ElasticSearchURL: elasticsearchURL,
-		AWSRegion: awsRegion,
+		AWSRegion:        awsRegion,
 	}
 
 	return []schema.Config{config}
