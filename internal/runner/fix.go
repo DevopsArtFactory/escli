@@ -14,17 +14,29 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package schema
+package runner
 
-type OldConfig Config0_0_3
+import (
+	"io"
 
-type Config struct {
-	Profile          string `yaml:"profile"`
-	ElasticSearchURL string `yaml:"elasticsearch_url"`
-	AWSRegion        string `yaml:"aws_region"`
-}
+	"github.com/fatih/color"
 
-type Config0_0_3 struct {
-	ElasticSearchURL string `yaml:"elasticsearchurl"`
-	AWSRegion        string `yaml:"awsregion"`
+	"github.com/DevopsArtFactory/escli/internal/config"
+)
+
+// Old Version: "0.0.3"
+// Current Version: "0.0.4"
+func (r Runner) Fix(out io.Writer) error {
+	p, err := config.GetOldConfig()
+	if err != nil || p == nil {
+		return err
+	}
+
+	if err := config.ConvertToNewConfig(p); err != nil {
+		return err
+	}
+
+	color.Green("Successfully convert configuration file")
+
+	return nil
 }

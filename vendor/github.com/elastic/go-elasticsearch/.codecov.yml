@@ -1,2 +1,0 @@
-ignore:
-  - "esapi/api.*.go"

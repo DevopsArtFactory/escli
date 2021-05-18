@@ -27,14 +27,30 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
 
 	"github.com/DevopsArtFactory/escli/internal/constants"
 	snapshotSchema "github.com/DevopsArtFactory/escli/internal/schema/snapshot"
 	"github.com/DevopsArtFactory/escli/internal/util"
 )
+
+type SnapshotSegment struct {
+	Key          string
+	StorageClass string
+}
+
+type SegmentError struct {
+	Key   string
+	Error error
+}
+
+func (s *SegmentError) PrintError() {
+	color.Red("Key: %s, error: %s", s.Key, s.Error.Error())
+}
 
 func (r Runner) ListSnapshot(out io.Writer) error {
 	repositories, err := r.Client.GetRepositories()
@@ -251,6 +267,11 @@ func (r Runner) getIndexIDFromS3(bucket *string, prefix *string) (*snapshotSchem
 }
 
 func (r Runner) RestoreSnapshot(out io.Writer, args []string) error {
+	maxSemaphore := r.Flag.MaxConcurrentJob
+	if maxSemaphore == 0 {
+		maxSemaphore = constants.DefaultMaxConcurrentJob
+	}
+
 	repositoryID := args[0]
 	snapshotID := args[1]
 	indexName := args[2]
@@ -263,6 +284,7 @@ func (r Runner) RestoreSnapshot(out io.Writer, args []string) error {
 		fmt.Fprintf(out, "base path : %s\n", util.StringWithColor(repository.Settings.BasePath))
 
 		var basePath string
+		var result []SegmentError
 
 		if repository.Settings.BasePath == constants.EmptyString {
 			basePath = constants.EmptyString
@@ -281,42 +303,80 @@ func (r Runner) RestoreSnapshot(out io.Writer, args []string) error {
 
 		metaData := snapshotsIndicesS3.Indices[indexName]
 		prefix := repository.Settings.BasePath + "/indices/" + metaData.ID + "/"
-		objs, _ := r.Client.GetObjects(aws.String(repository.Settings.Bucket), aws.String(prefix), nil, nil)
 
-		for {
-			for _, item := range objs.Contents {
-				fmt.Println(*item.Key)
-				if *item.StorageClass == "GLACIER" {
-					areAllObjectsStandard = false
-					if r.Flag.Force {
-						color.Green("Restore Storage Class to %s -> STANDARD", *item.StorageClass)
-						err := r.restoreObject(out, aws.String(repository.Settings.Bucket), item.Key)
-						if err != nil {
-							panic(err)
-						}
-					} else {
-						reader := bufio.NewReader(os.Stdin)
+		segments := r.AddObjectSegments(repository.Settings.Bucket, prefix, nil)
+		bar := pb.New(len(segments))
+		bar.SetRefreshRate(time.Second)
+		bar.SetWriter(out)
 
-						color.Blue("Change Storage Class to STANDARD [y/n]: ")
+		var wg sync.WaitGroup
+		semaphore := make(chan int, maxSemaphore)
+		output := make(chan []SegmentError)
+		input := make(chan SegmentError)
+		defer close(output)
 
-						resp, _ := reader.ReadString('\n')
-						if strings.ToLower(strings.TrimSpace(resp)) == "y" {
-							color.Green("Change Storage Class to %s -> STANDARD", *item.StorageClass)
-							err := r.restoreObject(out, aws.String(repository.Settings.Bucket), item.Key)
-							if err != nil {
-								panic(err)
-							}
-						} else {
-							color.Red("Don't change storage class %s", *item.Key)
-						}
+		go func(input chan SegmentError, output chan []SegmentError, wg *sync.WaitGroup, bar *pb.ProgressBar) {
+			var ret []SegmentError
+			for se := range input {
+				ret = append(ret, se)
+				bar.Add(1)
+				wg.Done()
+			}
+			output <- ret
+		}(input, output, &wg, bar)
+
+		f := func(out io.Writer, bucket string, segment SnapshotSegment, force bool, ch chan SegmentError, sem chan int) {
+			sem <- 1
+			time.Sleep(1 * time.Second)
+			if force {
+				//color.Green("Restore Storage Class to %s -> STANDARD", segment.StorageClass)
+				err := r.restoreObject(out, aws.String(bucket), aws.String(segment.Key))
+				ch <- SegmentError{
+					Key:   segment.Key,
+					Error: err,
+				}
+			} else {
+				reader := bufio.NewReader(os.Stdin)
+
+				color.Blue("Change Storage Class to STANDARD [y/n]: ")
+
+				resp, _ := reader.ReadString('\n')
+				if strings.ToLower(strings.TrimSpace(resp)) == "y" {
+					color.Green("Change Storage Class to %s -> STANDARD", segment.StorageClass)
+					err := r.restoreObject(out, aws.String(bucket), aws.String(segment.Key))
+					ch <- SegmentError{
+						Key:   segment.Key,
+						Error: err,
 					}
+				} else {
+					color.Red("Don't change storage class %s", segment.Key)
 				}
 			}
+			<-sem
+		}
 
-			if *objs.IsTruncated {
-				objs, _ = r.Client.GetObjects(aws.String(repository.Settings.Bucket), aws.String(prefix), nil, objs.NextContinuationToken)
+		bar.Start()
+		for _, s := range segments {
+			if s.StorageClass == "GLACIER" {
+				areAllObjectsStandard = false
+				wg.Add(1)
+				go f(out, repository.Settings.Bucket, s, r.Flag.Force, input, semaphore)
 			} else {
-				break
+				bar.Add(1)
+			}
+		}
+		wg.Wait()
+		close(input)
+
+		bar.Finish()
+
+		result = <-output
+
+		if len(result) > 0 {
+			for _, s := range result {
+				if s.Error != nil {
+					s.PrintError()
+				}
 			}
 		}
 	}
@@ -335,7 +395,7 @@ func (r Runner) RestoreSnapshot(out io.Writer, args []string) error {
 	return nil
 }
 
-func (r Runner) restoreObject(out io.Writer, bucket *string, key *string) error {
+func (r Runner) restoreObject(_ io.Writer, bucket *string, key *string) error {
 	resp, err := r.Client.HeadObject(bucket, key)
 
 	if err != nil {
@@ -344,18 +404,34 @@ func (r Runner) restoreObject(out io.Writer, bucket *string, key *string) error 
 
 	if resp.Restore != nil {
 		if *resp.Restore == "ongoing-request=\"true\"" {
-			fmt.Fprintf(out, "%s is ongoing-restore\n", util.StringWithColor(*key))
-			return nil
+			return fmt.Errorf("%s is ongoing-restore", util.StringWithColor(*key))
 		}
 		r.Client.TransitObject(bucket, key, "STANDARD")
 		return nil
 	}
 
-	err = r.Client.RestoreObject(bucket, key)
+	err = r.Client.RestoreObject(bucket, key, r.Flag.RestoreTier)
 
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// AddObjectSegments gather all segments recursively
+func (r *Runner) AddObjectSegments(bucket, prefix string, token *string) []SnapshotSegment {
+	var segments []SnapshotSegment
+	objs, _ := r.Client.GetObjects(aws.String(bucket), aws.String(prefix), nil, token)
+	for _, item := range objs.Contents {
+		segments = append(segments, SnapshotSegment{
+			Key:          *item.Key,
+			StorageClass: *item.StorageClass,
+		})
+	}
+	if *objs.IsTruncated {
+		return append(segments, r.AddObjectSegments(bucket, prefix, objs.NextContinuationToken)...)
+	}
+
+	return segments
 }

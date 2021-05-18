@@ -30,11 +30,15 @@ const (
 
 	GetClusterSetting = 0
 	PutClusterSetting = 3
+
+	HardLimitMaxConcurrentJob = 100
+	DefaultMaxConcurrentJob   = 50
 )
 
 var (
 	ConfigDirectoryPath = HomeDir() + "/.escli"
 	BaseFilePath        = ConfigDirectoryPath + "/config.yaml"
+	ValidRestoreTier    = []string{"Standard", "Bulk", "Expedited"}
 )
 
 // Get Home Directory

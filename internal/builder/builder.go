@@ -26,12 +26,14 @@ import (
 )
 
 type Flags struct {
-	Force        bool   `json:"force"`
-	TroubledOnly bool   `json:"troubled-only"`
-	RepoOnly     bool   `json:"repo-only"`
-	WithRepo     string `json:"with-repo"`
-	Region       string `json:"region"`
-	SortBy       string `json:"sort-by"`
+	Force            bool   `json:"force"`
+	TroubledOnly     bool   `json:"troubled-only"`
+	RepoOnly         bool   `json:"repo-only"`
+	WithRepo         string `json:"with-repo"`
+	Region           string `json:"region"`
+	SortBy           string `json:"sort-by"`
+	RestoreTier      string `json:"restore-tier"`
+	MaxConcurrentJob int64  `json:"max-concurrent-job"`
 }
 
 func ParseFlags() (*Flags, error) {

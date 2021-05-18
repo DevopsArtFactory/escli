@@ -205,3 +205,41 @@ func JSONtoPrettyString(v interface{}) (string, error) {
 func RemoveSlice(slice []schema.Config, s int) []schema.Config {
 	return append(slice[:s], slice[s+1:]...)
 }
+
+func AskElasticSearchURL() (string, error) {
+	var elasticsearchURL string
+	prompt := &survey.Input{
+		Message: "Your ElasticSearch URL : ",
+	}
+	survey.AskOne(prompt, &elasticsearchURL)
+
+	if len(elasticsearchURL) == 0 {
+		return elasticsearchURL, errors.New("input elasticsearch url has been canceled")
+	}
+
+	return elasticsearchURL, nil
+}
+
+func AskProfile() (string, error) {
+	var profile string
+	prompt := &survey.Input{
+		Message: "Your Profile Name : ",
+	}
+	survey.AskOne(prompt, &profile)
+
+	if len(profile) == 0 {
+		return profile, errors.New("input profile name has been canceled")
+	}
+
+	return profile, nil
+}
+
+func AskAWSRegion() (string, error) {
+	var region string
+	prompt := &survey.Input{
+		Message: "Your AWS Default Region (If you don't use AWS, type blank) : ",
+	}
+	survey.AskOne(prompt, &region)
+
+	return region, nil
+}

@@ -102,6 +102,26 @@ var FlagRegistry = []Flag{
 			"snapshot restore [repositoryID] [snapshotID] [indexName]",
 			"snapshot archive [repositoryID] [snapshotID]"},
 	},
+	{
+		Name:          "restore-tier",
+		Usage:         "Tier of restore job",
+		Value:         aws.String("Standard"),
+		DefValue:      "Standard",
+		FlagAddMethod: "StringVar",
+		DefinedOn: []string{
+			"snapshot restore [repositoryID] [snapshotID] [indexName]",
+		},
+	},
+	{
+		Name:          "max-concurrent-job",
+		Usage:         "Maximum number of concurrent jobs for restoring snapshot",
+		Value:         aws.Int64(constants.DefaultMaxConcurrentJob),
+		DefValue:      int64(constants.DefaultMaxConcurrentJob),
+		FlagAddMethod: "Int64Var",
+		DefinedOn: []string{
+			"snapshot restore [repositoryID] [snapshotID] [indexName]",
+		},
+	},
 }
 
 func (fl *Flag) flag() *pflag.Flag {
