@@ -21,6 +21,7 @@ import "os"
 const (
 	DefaultRegion = "ap-northeast-2"
 	EmptyString   = ""
+	GlacierType   = "GLACIER"
 )
 
 const (
@@ -36,9 +37,10 @@ const (
 )
 
 var (
-	ConfigDirectoryPath = HomeDir() + "/.escli"
-	BaseFilePath        = ConfigDirectoryPath + "/config.yaml"
-	ValidRestoreTier    = []string{"Standard", "Bulk", "Expedited"}
+	ConfigDirectoryPath     = HomeDir() + "/.escli"
+	BaseFilePath            = ConfigDirectoryPath + "/config.yaml"
+	ValidRestoreTier        = []string{"Standard", "Bulk", "Expedited"}
+	SupportedRepositoryType = []string{"s3"}
 )
 
 // Get Home Directory
