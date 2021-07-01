@@ -64,14 +64,14 @@ func (c Client) HeadObject(bucket *string, key *string) (*s3.HeadObjectOutput, e
 	return resp, nil
 }
 
-func (c Client) RestoreObject(bucket *string, key *string) error {
+func (c Client) RestoreObject(bucket *string, key *string, restoreTier string) error {
 	_, err := c.S3Client.RestoreObject(&s3.RestoreObjectInput{
 		Bucket: bucket,
 		Key:    key,
 		RestoreRequest: &s3.RestoreRequest{
 			Days: aws.Int64(10),
 			GlacierJobParameters: &s3.GlacierJobParameters{
-				Tier: aws.String("Standard"),
+				Tier: aws.String(restoreTier),
 			},
 		},
 	})

@@ -14,17 +14,26 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package schema
+package cmd
 
-type OldConfig Config0_0_3
+import (
+	"context"
+	"io"
 
-type Config struct {
-	Profile          string `yaml:"profile"`
-	ElasticSearchURL string `yaml:"elasticsearch_url"`
-	AWSRegion        string `yaml:"aws_region"`
+	"github.com/spf13/cobra"
+
+	"github.com/DevopsArtFactory/escli/cmd/cmd/builder"
+	"github.com/DevopsArtFactory/escli/internal/executor"
+)
+
+func NewFixCommand() *cobra.Command {
+	return builder.NewCmd("fix").
+		WithDescription("fix old configuration or settings of escli yaml file").
+		NoArgs(funcFixCommand)
 }
 
-type Config0_0_3 struct {
-	ElasticSearchURL string `yaml:"elasticsearchurl"`
-	AWSRegion        string `yaml:"awsregion"`
+func funcFixCommand(ctx context.Context, out io.Writer) error {
+	return executor.RunExecutorWithoutCheckingConfig(ctx, func(executor executor.Executor) error {
+		return executor.Runner.Fix(out)
+	})
 }

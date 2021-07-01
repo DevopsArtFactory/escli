@@ -23,7 +23,6 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 
@@ -101,17 +100,17 @@ func (r Runner) AddProfile(out io.Writer) error {
 		}
 	}
 
-	profile, err := AskProfile()
+	profile, err := util.AskProfile()
 	if err != nil {
 		return err
 	}
 	// Ask base account name which should be a company mail
-	elasticsearchURL, err := AskElasticSearchURL()
+	elasticsearchURL, err := util.AskElasticSearchURL()
 	if err != nil {
 		return err
 	}
 
-	awsRegion, err := AskAWSRegion()
+	awsRegion, err := util.AskAWSRegion()
 	if err != nil {
 		return err
 	}
@@ -139,44 +138,6 @@ func (r Runner) AddProfile(out io.Writer) error {
 	fmt.Fprintf(out, "Adding profile to configuration file is successfully in %s", util.BlueString(cfgFile))
 
 	return nil
-}
-
-func AskElasticSearchURL() (string, error) {
-	var elasticsearchURL string
-	prompt := &survey.Input{
-		Message: "Your ElasticSearch URL : ",
-	}
-	survey.AskOne(prompt, &elasticsearchURL)
-
-	if len(elasticsearchURL) == 0 {
-		return elasticsearchURL, errors.New("input elasticsearch url has been canceled")
-	}
-
-	return elasticsearchURL, nil
-}
-
-func AskProfile() (string, error) {
-	var profile string
-	prompt := &survey.Input{
-		Message: "Your Profile Name : ",
-	}
-	survey.AskOne(prompt, &profile)
-
-	if len(profile) == 0 {
-		return profile, errors.New("input profile name has been canceled")
-	}
-
-	return profile, nil
-}
-
-func AskAWSRegion() (string, error) {
-	var region string
-	prompt := &survey.Input{
-		Message: "Your AWS Default Region (If you don't use AWS, type blank) : ",
-	}
-	survey.AskOne(prompt, &region)
-
-	return region, nil
 }
 
 func generateConfigFile(b []byte) error {

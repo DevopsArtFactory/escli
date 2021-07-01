@@ -40,7 +40,7 @@ func RunExecutor(ctx context.Context, action func(Executor) error) error {
 
 	executor, _ := createNewExecutor(p)
 
-	err = action(*executor)
+	err = withValidation(action, executor)
 
 	return alwaysSucceedWhenCancelled(ctx, err)
 }
@@ -53,7 +53,7 @@ func RunExecutorWithoutCheckingConfig(ctx context.Context, action func(Executor)
 
 	executor, _ := createNewExecutor(p)
 
-	err = action(*executor)
+	err = withValidation(action, executor)
 
 	return alwaysSucceedWhenCancelled(ctx, err)
 }
@@ -78,4 +78,11 @@ func alwaysSucceedWhenCancelled(ctx context.Context, err error) error {
 		return nil
 	}
 	return err
+}
+
+func withValidation(action func(Executor) error, executor *Executor) error {
+	if err := FlagValidation(*executor.Runner.Flag); err != nil {
+		return err
+	}
+	return action(*executor)
 }

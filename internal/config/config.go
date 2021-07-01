@@ -17,24 +17,31 @@ limitations under the license.
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 
+	"github.com/fatih/color"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 
 	"github.com/DevopsArtFactory/escli/internal/schema"
+	"github.com/DevopsArtFactory/escli/internal/util"
 )
 
 func GetConfig() (*schema.Config, error) {
 	var configs []schema.Config
 
-	yamlFile, err := ioutil.ReadFile(viper.GetString("cfgFile"))
+	filePath := viper.GetString("cfgFile")
+	yamlFile, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
 	err = yaml.Unmarshal(yamlFile, &configs)
 	if err != nil {
+		if old, err := detectOldConfig(); err == nil && old {
+			return nil, fmt.Errorf("you are using old version configuration. please run `escli fix` to migrate configuration")
+		}
 		return nil, err
 	}
 
@@ -47,6 +54,78 @@ func GetConfig() (*schema.Config, error) {
 	}
 
 	return &configs[0], nil
+}
+
+func detectConfig() (bool, error) {
+	var config []schema.Config
+	filePath := viper.GetString("cfgFile")
+	yamlFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return false, err
+	}
+	err = yaml.Unmarshal(yamlFile, &config)
+	if err != nil {
+		return false, err
+	}
+
+	return true, err
+}
+
+func detectOldConfig() (bool, error) {
+	var config schema.OldConfig
+	filePath := viper.GetString("cfgFile")
+	yamlFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return false, err
+	}
+	err = yaml.Unmarshal(yamlFile, &config)
+	if err != nil {
+		return false, err
+	}
+
+	return true, err
+}
+
+func GetOldConfig() (*schema.OldConfig, error) {
+	var config schema.OldConfig
+
+	filePath := viper.GetString("cfgFile")
+	yamlFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(yamlFile, &config)
+	if err != nil {
+		if new, err := detectConfig(); err == nil && new {
+			color.Green("your configuration is already updated")
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+func ConvertToNewConfig(oc *schema.OldConfig) error {
+	cfgFile := viper.GetString("cfgFile")
+
+	profile, err := util.AskProfile()
+	if err != nil {
+		return err
+	}
+
+	c := SetInitConfig(profile, oc.ElasticSearchURL, oc.AWSRegion)
+	y, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+
+	if err := util.CreateFile(cfgFile, string(y)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func GetDefaultConfig() (*schema.Config, error) {
