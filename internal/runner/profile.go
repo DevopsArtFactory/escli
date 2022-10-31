@@ -22,6 +22,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -92,6 +93,13 @@ func (r Runner) RemoveProfile(out io.Writer, args []string) error {
 
 func (r Runner) AddProfile(out io.Writer) error {
 	cfgFile := viper.GetString("cfgFile")
+
+	if !util.DirExists(filepath.Dir(cfgFile)) {
+		err := os.MkdirAll(filepath.Dir(cfgFile), 0755)
+		if err != nil {
+			return err
+		}
+	}
 
 	if !util.FileExists(cfgFile) {
 		_, err := os.Create(cfgFile)
