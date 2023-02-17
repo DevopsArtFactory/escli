@@ -14,11 +14,7 @@ see the license for the specific language governing permissions and
 limitations under the license.
 */
 
-package index
-
-type RequestBody struct {
-	Index map[string]string `json:"index"`
-}
+package stats
 
 type Stats struct {
 	Shards Shards `json:"_shards"`

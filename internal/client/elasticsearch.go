@@ -18,22 +18,28 @@ package client
 
 import (
 	"bytes"
+	"fmt"
+	"net/http"
 	"strings"
 
-	"github.com/elastic/go-elasticsearch"
-	"github.com/elastic/go-elasticsearch/esapi"
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 
 	"github.com/DevopsArtFactory/escli/internal/constants"
 	catSchema "github.com/DevopsArtFactory/escli/internal/schema/cat"
+	indexSchema "github.com/DevopsArtFactory/escli/internal/schema/index"
 	snapshotSchema "github.com/DevopsArtFactory/escli/internal/schema/snapshot"
 	"github.com/DevopsArtFactory/escli/internal/util"
 )
 
-func GetESClientFn(elasticSearchURL string) *elasticsearch.Client {
+func GetESClientFn(url, httpUsername, httpPassword, certificateFingerprint string) *elasticsearch.Client {
 	cfg := elasticsearch.Config{
 		Addresses: []string{
-			elasticSearchURL,
+			url,
 		},
+		Username:               httpUsername,
+		Password:               httpPassword,
+		CertificateFingerprint: certificateFingerprint,
 	}
 	es, _ := elasticsearch.NewClient(cfg)
 
@@ -41,16 +47,7 @@ func GetESClientFn(elasticSearchURL string) *elasticsearch.Client {
 }
 
 func (c Client) GetRepositories() (map[string]snapshotSchema.Repository, error) {
-	//var repositories []catSchema.Repository
 	var repositories map[string]snapshotSchema.Repository
-
-	/*
-		resp, err := c.ESClient.Cat.Repositories(
-			c.ESClient.Cat.Repositories.WithFormat("json"))
-		if err != nil {
-			return nil, err
-		}
-	*/
 
 	resp, err := c.ESClient.Snapshot.GetRepository()
 	if err != nil {
@@ -90,7 +87,9 @@ func (c Client) CreateSnapshot(repositoryID, snapshotID, requestBody string) (in
 func (c Client) DeleteSnapshot(repositoryID, snapshotID string) (int, error) {
 	resp, err := c.ESClient.Snapshot.Delete(
 		repositoryID,
-		snapshotID,
+		[]string{
+			snapshotID,
+		},
 	)
 	if err != nil {
 		return resp.StatusCode, err
@@ -132,7 +131,11 @@ func (c Client) CatHealth() ([]catSchema.Health, error) {
 	resp, err := c.ESClient.Cat.Health(
 		c.ESClient.Cat.Health.WithFormat("json"))
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, util.ErrorWithStatus(resp.StatusCode)
 	}
 	util.ConvertJSONtoMetadata(resp.Body, &healthMetadata)
 
@@ -143,7 +146,7 @@ func (c Client) CatIndices(sortKey string) ([]catSchema.Index, error) {
 	var indicesMetadata []catSchema.Index
 
 	if sortKey == constants.EmptyString {
-		sortKey = "index"
+		sortKey = constants.DefaultSortKey
 	}
 
 	resp, err := c.ESClient.Cat.Indices(
@@ -151,6 +154,9 @@ func (c Client) CatIndices(sortKey string) ([]catSchema.Index, error) {
 		c.ESClient.Cat.Indices.WithS(sortKey))
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, util.ErrorWithStatus(resp.StatusCode)
 	}
 	util.ConvertJSONtoMetadata(resp.Body, &indicesMetadata)
 
@@ -166,10 +172,13 @@ func (c Client) CatNodes(sortKey string) ([]catSchema.Node, error) {
 
 	resp, err := c.ESClient.Cat.Nodes(
 		c.ESClient.Cat.Nodes.WithFormat("json"),
-		c.ESClient.Cat.Nodes.WithH("id,node.role,ip,name,disk.used_percent,load_1m,load_5m,load_15m,uptime"),
+		c.ESClient.Cat.Nodes.WithH("id,node.role,ip,name,disk.used_percent,load_1m,load_5m,load_15m,uptime,master,disk.total,disk.used,disk.avail"),
 		c.ESClient.Cat.Nodes.WithS(sortKey))
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, util.ErrorWithStatus(resp.StatusCode)
 	}
 	util.ConvertJSONtoMetadata(resp.Body, &nodesMetadata)
 
@@ -180,7 +189,7 @@ func (c Client) CatShards(sortKey string) ([]catSchema.Shard, error) {
 	var shardsMetadata []catSchema.Shard
 
 	if sortKey == constants.EmptyString {
-		sortKey = "index"
+		sortKey = constants.DefaultSortKey
 	}
 
 	resp, err := c.ESClient.Cat.Shards(
@@ -189,6 +198,9 @@ func (c Client) CatShards(sortKey string) ([]catSchema.Shard, error) {
 		c.ESClient.Cat.Shards.WithS(sortKey))
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, util.ErrorWithStatus(resp.StatusCode)
 	}
 	util.ConvertJSONtoMetadata(resp.Body, &shardsMetadata)
 
@@ -215,6 +227,9 @@ func (c Client) GetIndexSetting(indexName, settingName string) (string, error) {
 	if err != nil {
 		return constants.EmptyString, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return constants.EmptyString, util.ErrorWithStatus(resp.StatusCode)
+	}
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 
@@ -230,6 +245,9 @@ func (c Client) PutIndexSetting(indexName, requestBody string) (string, error) {
 
 	if err != nil {
 		return constants.EmptyString, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return constants.EmptyString, util.ErrorWithStatus(resp.StatusCode)
 	}
 
 	buf := new(bytes.Buffer)
@@ -249,6 +267,9 @@ func (c Client) GetClusterSetting() (string, error) {
 	if err != nil {
 		return constants.EmptyString, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return constants.EmptyString, util.ErrorWithStatus(resp.StatusCode)
+	}
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 
@@ -264,6 +285,9 @@ func (c Client) PutClusterSetting(requestBody string) (string, error) {
 	if err != nil {
 		return constants.EmptyString, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return constants.EmptyString, util.ErrorWithStatus(resp.StatusCode)
+	}
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
@@ -277,6 +301,27 @@ func (c Client) ClusterReroute() (string, error) {
 
 	if err != nil {
 		return constants.EmptyString, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return constants.EmptyString, util.ErrorWithStatus(resp.StatusCode)
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+
+	return buf.String(), nil
+}
+
+func (c Client) CreateIndex(index string) (string, error) {
+	resp, err := c.ESClient.Indices.Create(
+		index,
+	)
+
+	if err != nil {
+		return constants.EmptyString, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return constants.EmptyString, util.ErrorWithStatus(resp.StatusCode)
 	}
 
 	buf := new(bytes.Buffer)
@@ -293,9 +338,46 @@ func (c Client) DeleteIndex(indices []string) (string, error) {
 	if err != nil {
 		return constants.EmptyString, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return constants.EmptyString, util.ErrorWithStatus(resp.StatusCode)
+	}
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 
 	return buf.String(), nil
+}
+
+func (c Client) IndexStats(index string) (*indexSchema.Stats, error) {
+	var indexStatsMetadata indexSchema.Stats
+
+	resp, err := c.ESClient.Indices.Stats(
+		c.ESClient.Indices.Stats.WithIndex(index),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, util.ErrorWithStatus(resp.StatusCode)
+	}
+	util.ConvertJSONtoMetadata(resp.Body, &indexStatsMetadata)
+
+	return &indexStatsMetadata, nil
+}
+
+func (c Client) Stats() (*indexSchema.Stats, error) {
+	var indexStatsMetadata indexSchema.Stats
+
+	resp, err := c.ESClient.Indices.Stats()
+
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, util.ErrorWithStatus(resp.StatusCode)
+	}
+	util.ConvertJSONtoMetadata(resp.Body, &indexStatsMetadata)
+
+	return &indexStatsMetadata, nil
 }

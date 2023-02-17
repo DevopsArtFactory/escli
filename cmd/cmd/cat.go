@@ -42,6 +42,7 @@ func NewCatCommand() *cobra.Command {
 
 	builder.SetCommandFlags(catIndicesCommand)
 	builder.SetCommandFlags(catShardsCommand)
+	builder.SetCommandFlags(catNodesCommand)
 
 	return cmd
 }

@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/elastic/go-elasticsearch/esapi"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
@@ -214,18 +214,33 @@ func RemoveSlice(slice []schema.Config, s int) []schema.Config {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func AskElasticSearchURL() (string, error) {
-	var elasticsearchURL string
+func AskURL() (string, error) {
+	var url string
 	prompt := &survey.Input{
-		Message: "Your ElasticSearch URL : ",
+		Message: "Your ElasticSearch or OpenSearch URL : ",
 	}
-	survey.AskOne(prompt, &elasticsearchURL)
+	survey.AskOne(prompt, &url)
 
-	if len(elasticsearchURL) == 0 {
-		return elasticsearchURL, errors.New("input elasticsearch url has been canceled")
+	if len(url) == 0 {
+		return url, errors.New("input url has been canceled")
 	}
 
-	return elasticsearchURL, nil
+	return url, nil
+}
+
+func AskProduct() (string, error) {
+	var product string
+	prompt := &survey.Select{
+		Message: "Select your product (elasticsearch or opensearch) : ",
+		Options: []string{"elasticsearch", "opensearch"},
+	}
+	survey.AskOne(prompt, &product)
+
+	if len(product) == 0 {
+		return product, errors.New("input url has been canceled")
+	}
+
+	return product, nil
 }
 
 func AskProfile() (string, error) {
@@ -250,4 +265,45 @@ func AskAWSRegion() (string, error) {
 	survey.AskOne(prompt, &region)
 
 	return region, nil
+}
+
+func AskHTTPUsername() (string, error) {
+	var username string
+	prompt := &survey.Input{
+		Message: "Your HTTP Username (If you don't use http basic authentication, type blank) : ",
+	}
+	survey.AskOne(prompt, &username)
+
+	return username, nil
+}
+
+func AskHTTPPassword() (string, error) {
+	var password string
+	prompt := &survey.Password{
+		Message: "Your HTTP Password (If you don't use http basic authentication, type blank) : ",
+	}
+	survey.AskOne(prompt, &password)
+
+	return password, nil
+}
+
+func AskCertificateFingerPrint() (string, error) {
+	var certificateFingerPrint string
+	prompt := &survey.Input{
+		Message: "Your certificateFingerPrint (If you don't use certificate finger print, type blank) : ",
+	}
+	survey.AskOne(prompt, &certificateFingerPrint)
+
+	return certificateFingerPrint, nil
+}
+
+func Divide(a, b int) float32 {
+	if b == 0 {
+		return 0
+	}
+	return float32(a) / float32(b)
+}
+
+func ErrorWithStatus(statusCode int) error {
+	return fmt.Errorf("status code : %d", statusCode)
 }

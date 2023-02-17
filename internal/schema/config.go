@@ -19,9 +19,13 @@ package schema
 type OldConfig Config0_0_3
 
 type Config struct {
-	Profile          string `yaml:"profile"`
-	ElasticSearchURL string `yaml:"elasticsearch_url"`
-	AWSRegion        string `yaml:"aws_region"`
+	Profile                string `yaml:"profile"`
+	URL                    string `yaml:"url"`
+	Product                string `yaml:"product"`
+	AWSRegion              string `yaml:"aws_region,omitempty"`
+	HTTPUsername           string `yaml:"http_username,omitempty"`
+	HTTPPassword           string `yaml:"http_password,omitempty"`
+	CertificateFingerPrint string `yaml:"certificate_fingerprint,omitempty"`
 }
 
 type Config0_0_3 struct {

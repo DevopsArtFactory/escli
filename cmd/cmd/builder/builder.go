@@ -53,10 +53,6 @@ func (b builder) WithDescription(description string) Builder {
 	return b
 }
 
-func (b builder) WithUsageTemplate(s string) {
-	b.cmd.SetUsageTemplate("abc")
-}
-
 func (b builder) ExactArgs(argCount int, action func(context.Context, io.Writer, []string) error) *cobra.Command {
 	b.cmd.Args = cobra.ExactArgs(argCount)
 	b.cmd.RunE = func(cmd *cobra.Command, args []string) error {

@@ -19,9 +19,12 @@ package constants
 import "os"
 
 const (
-	DefaultRegion = "ap-northeast-2"
-	EmptyString   = ""
-	GlacierType   = "GLACIER"
+	DefaultRegion  = "ap-northeast-2"
+	EmptyString    = ""
+	GlacierType    = "GLACIER"
+	DefaultProduct = "elasticsearch"
+	OpenSearch     = "opensearch"
+	DefaultSortKey = "index"
 )
 
 const (

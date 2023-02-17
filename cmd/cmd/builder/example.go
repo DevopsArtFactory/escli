@@ -44,6 +44,10 @@ var ExampleList = []Example{
 		Description: "  escli snapshot archive application-log snapshot-2020.01.01",
 		DefinedOn:   []string{"snapshot archive [repositoryID] [snapshotID]"},
 	},
+	{
+		Description: "  escli index stats logs-2020.01.01 1",
+		DefinedOn:   []string{"index stats [index name] [interval]"},
+	},
 }
 
 func SetCommandExample(cmd *cobra.Command) {

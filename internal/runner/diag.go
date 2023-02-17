@@ -25,12 +25,21 @@ import (
 	"github.com/enescakir/emoji"
 	"github.com/fatih/color"
 
+	"github.com/DevopsArtFactory/escli/internal/constants"
 	catSchema "github.com/DevopsArtFactory/escli/internal/schema/cat"
 	"github.com/DevopsArtFactory/escli/internal/util"
 )
 
 func (r Runner) DiagCluster(out io.Writer) error {
-	healthMetadata, err := r.Client.CatHealth()
+	var healthMetadata []catSchema.Health
+	var err error
+
+	if r.Config.Product == constants.OpenSearch {
+		healthMetadata, err = r.Client.OSCatHealth()
+	} else {
+		healthMetadata, err = r.Client.CatHealth()
+	}
+
 	if err != nil {
 		return err
 	}
@@ -38,7 +47,14 @@ func (r Runner) DiagCluster(out io.Writer) error {
 	fmt.Fprintf(out, "check cluster status...........................")
 	printStatusByHealth(out, healthMetadata[0])
 
-	indexMetadata, err := r.Client.CatIndices(r.Flag.SortBy)
+	var indexMetadata []catSchema.Index
+
+	if r.Config.Product == constants.OpenSearch {
+		indexMetadata, err = r.Client.OSCatIndices(r.Flag.SortBy)
+	} else {
+		indexMetadata, err = r.Client.CatIndices(r.Flag.SortBy)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -52,7 +68,14 @@ func (r Runner) DiagCluster(out io.Writer) error {
 	// Check role of nodes
 	fmt.Fprintf(out, "check number of master nodes...................")
 
-	nodeMetadata, err := r.Client.CatNodes(r.Flag.SortBy)
+	var nodeMetadata []catSchema.Node
+
+	if r.Config.Product == constants.OpenSearch {
+		nodeMetadata, err = r.Client.OSCatNodes(r.Flag.SortBy)
+	} else {
+		nodeMetadata, err = r.Client.CatNodes(r.Flag.SortBy)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -111,7 +134,7 @@ func checkNumberOfMasterNodes(out io.Writer, nodeMetadata []catSchema.Node) {
 		}
 	}
 
-	if util.IsEvenNumber(numberOfMasterNodes) {
+	if util.IsEvenNumber(numberOfMasterNodes) || numberOfMasterNodes < 2 {
 		fmt.Fprintf(out, "[%s] %v\n", util.IntWithColor(numberOfMasterNodes, "red"), emoji.FaceScreamingInFear)
 		fmt.Fprintf(out, "%v check more information by %s\n", emoji.ExclamationMark, util.StringWithColor("escli cat master"))
 		color.Red("It will be caused split brain\n")

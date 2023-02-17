@@ -28,6 +28,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/DevopsArtFactory/escli/internal/config"
+	"github.com/DevopsArtFactory/escli/internal/constants"
 	"github.com/DevopsArtFactory/escli/internal/schema"
 	"github.com/DevopsArtFactory/escli/internal/util"
 )
@@ -43,9 +44,29 @@ func (r Runner) ListProfile(out io.Writer) error {
 	_ = yaml.Unmarshal(yamlFile, &configs)
 
 	for _, config := range configs {
-		fmt.Fprintf(out, "Profile           : %s\n", util.StringWithColor(config.Profile))
-		fmt.Fprintf(out, "ElasticSearch URL : %s\n", util.StringWithColor(config.ElasticSearchURL))
-		fmt.Fprintf(out, "AWS Region        : %s\n\n", util.StringWithColor(config.AWSRegion))
+		fmt.Fprintf(out, "Profile                  : %s\n", util.StringWithColor(config.Profile))
+		fmt.Fprintf(out, "URL                      : %s\n", util.StringWithColor(config.URL))
+
+		if config.Product != constants.EmptyString {
+			fmt.Fprintf(out, "Product                  : %s\n", util.StringWithColor(config.Product))
+		} else {
+			fmt.Fprintf(out, "Product                  : %s\n", util.StringWithColor("elasticsearch"))
+		}
+
+		if config.AWSRegion != constants.EmptyString {
+			fmt.Fprintf(out, "AWS Region               : %s\n", util.StringWithColor(config.AWSRegion))
+		}
+
+		if config.HTTPUsername != constants.EmptyString {
+			fmt.Fprintf(out, "HTTP Username            : %s\n", util.StringWithColor(config.HTTPUsername))
+			fmt.Fprintf(out, "HTTP Password            : %s\n", util.StringWithColor("************"))
+		}
+
+		if config.CertificateFingerPrint != constants.EmptyString {
+			fmt.Fprintf(out, "Certificate Finger Print : %s\n", util.StringWithColor(config.CertificateFingerPrint))
+		}
+
+		fmt.Fprintf(out, "\n")
 	}
 
 	return nil
@@ -113,7 +134,12 @@ func (r Runner) AddProfile(out io.Writer) error {
 		return err
 	}
 	// Ask base account name which should be a company mail
-	elasticsearchURL, err := util.AskElasticSearchURL()
+	url, err := util.AskURL()
+	if err != nil {
+		return err
+	}
+
+	product, err := util.AskProduct()
 	if err != nil {
 		return err
 	}
@@ -123,7 +149,22 @@ func (r Runner) AddProfile(out io.Writer) error {
 		return err
 	}
 
-	c := config.SetInitConfig(profile, elasticsearchURL, awsRegion)
+	httpUsername, err := util.AskHTTPUsername()
+	if err != nil {
+		return err
+	}
+
+	httpPassword, err := util.AskHTTPPassword()
+	if err != nil {
+		return err
+	}
+
+	certificateFingerPrint, err := util.AskCertificateFingerPrint()
+	if err != nil {
+		return err
+	}
+
+	c := config.SetInitConfig(profile, url, product, awsRegion, httpUsername, httpPassword, certificateFingerPrint)
 	y, err := yaml.Marshal(c)
 	if err != nil {
 		return err

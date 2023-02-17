@@ -21,11 +21,21 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/DevopsArtFactory/escli/internal/constants"
+	catSchema "github.com/DevopsArtFactory/escli/internal/schema/cat"
 	"github.com/DevopsArtFactory/escli/internal/util"
 )
 
 func (r Runner) CatHealth(out io.Writer) error {
-	healthMetadata, err := r.Client.CatHealth()
+	var healthMetadata []catSchema.Health
+	var err error
+
+	if r.Config.Product == constants.OpenSearch {
+		healthMetadata, err = r.Client.OSCatHealth()
+	} else {
+		healthMetadata, err = r.Client.CatHealth()
+	}
+
 	if err != nil {
 		return err
 	}
@@ -46,7 +56,15 @@ func (r Runner) CatHealth(out io.Writer) error {
 }
 
 func (r Runner) CatIndices(out io.Writer) error {
-	indicesMetadata, err := r.Client.CatIndices(r.Flag.SortBy)
+	var indicesMetadata []catSchema.Index
+	var err error
+
+	if r.Config.Product == constants.OpenSearch {
+		indicesMetadata, err = r.Client.OSCatIndices(r.Flag.SortBy)
+	} else {
+		indicesMetadata, err = r.Client.CatIndices(r.Flag.SortBy)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -81,29 +99,46 @@ func (r Runner) CatIndices(out io.Writer) error {
 }
 
 func (r Runner) CatNodes(out io.Writer) error {
-	nodesMetadata, err := r.Client.CatNodes(r.Flag.SortBy)
+	var nodesMetadata []catSchema.Node
+	var err error
+
+	if r.Config.Product == constants.OpenSearch {
+		nodesMetadata, err = r.Client.OSCatNodes(r.Flag.SortBy)
+	} else {
+		nodesMetadata, err = r.Client.CatNodes(r.Flag.SortBy)
+	}
+
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(out, "%-50s\t%s\t%4s\t%7s\t%7s\t%8s\t%6s\t%17s\n",
+	fmt.Fprintf(out, "%-50s\t%s\t%4s\t%6s\t%7s\t%7s\t%8s\t%6s\t%10s\t%10s\t%10s\t%17s\n",
 		"name",
 		"ip",
 		"role",
+		"master",
 		"load_1m",
 		"load_5m",
 		"load_15m",
 		"uptime",
-		"disk.used_percent")
+		"disk.total",
+		"disk.avail",
+		"disk.used",
+		"disk.used_percent",
+	)
 	for _, node := range nodesMetadata {
-		fmt.Fprintf(out, "%-50s\t%s\t%4s\t%7s\t%7s\t%8s\t%6s\t%17s\n",
+		fmt.Fprintf(out, "%-50s\t%s\t%4s\t%6s\t%7s\t%7s\t%8s\t%6s\t%10s\t%10s\t%10s\t%17s\n",
 			node.Name,
 			node.IP,
 			node.NodeRole,
+			node.Master,
 			node.Load1M,
 			node.Load5M,
 			node.Load15M,
 			node.Uptime,
+			node.DiskTotal,
+			node.DiskAvail,
+			node.DiskUsed,
 			node.DiskUsedPercent)
 	}
 
@@ -111,7 +146,15 @@ func (r Runner) CatNodes(out io.Writer) error {
 }
 
 func (r Runner) CatShards(out io.Writer) error {
-	shardsMetadata, err := r.Client.CatShards(r.Flag.SortBy)
+	var shardsMetadata []catSchema.Shard
+	var err error
+
+	if r.Config.Product == constants.OpenSearch {
+		shardsMetadata, err = r.Client.OSCatShards(r.Flag.SortBy)
+	} else {
+		shardsMetadata, err = r.Client.CatShards(r.Flag.SortBy)
+	}
+
 	if err != nil {
 		return err
 	}

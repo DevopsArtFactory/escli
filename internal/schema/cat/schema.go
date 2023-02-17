@@ -52,6 +52,10 @@ type Node struct {
 	Load5M          string `json:"load_5m"`
 	Load15M         string `json:"load_15m"`
 	Uptime          string `json:"uptime"`
+	Master          string `json:"master"`
+	DiskTotal       string `json:"disk.total"`
+	DiskUsed        string `json:"disk.used"`
+	DiskAvail       string `json:"disk.avail"`
 }
 
 type Shard struct {

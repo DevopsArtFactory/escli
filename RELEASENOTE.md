@@ -1,5 +1,11 @@
 # Release Note
 
+## 0.0.5 (2023/02/13)
+- `escli` supports OpenSearch.
+- `index stats` command shows statistics of index.
+- `stats` command shows statistics of cluster.
+- `index create` command create index.
+
 ## 0.0.4 (2021/03/30)
 - autocomplete is included.
 - `profiles list` command shows all profiles of escli.

@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 
+	"github.com/DevopsArtFactory/escli/internal/constants"
 	"github.com/DevopsArtFactory/escli/internal/schema"
 	"github.com/DevopsArtFactory/escli/internal/util"
 )
@@ -38,6 +39,7 @@ func GetConfig() (*schema.Config, error) {
 	}
 
 	err = yaml.Unmarshal(yamlFile, &configs)
+
 	if err != nil {
 		if old, err := detectOldConfig(); err == nil && old {
 			return nil, fmt.Errorf("you are using old version configuration. please run `escli fix` to migrate configuration")
@@ -115,7 +117,7 @@ func ConvertToNewConfig(oc *schema.OldConfig) error {
 		return err
 	}
 
-	c := SetInitConfig(profile, oc.ElasticSearchURL, oc.AWSRegion)
+	c := SetInitConfig(profile, oc.ElasticSearchURL, constants.DefaultProduct, oc.AWSRegion, constants.EmptyString, constants.EmptyString, constants.EmptyString)
 	y, err := yaml.Marshal(c)
 	if err != nil {
 		return err
@@ -134,11 +136,24 @@ func GetDefaultConfig() (*schema.Config, error) {
 	return profile, nil
 }
 
-func SetInitConfig(profile string, elasticsearchURL string, awsRegion string) []schema.Config {
+func SetInitConfig(profile, url, product, awsRegion, httpUsername, httpPassword, certificateFingerPrint string) []schema.Config {
 	config := schema.Config{
-		Profile:          profile,
-		ElasticSearchURL: elasticsearchURL,
-		AWSRegion:        awsRegion,
+		Profile: profile,
+		URL:     url,
+		Product: product,
+	}
+
+	if awsRegion != constants.EmptyString {
+		config.AWSRegion = awsRegion
+	}
+
+	if httpUsername != constants.EmptyString && httpPassword != constants.EmptyString {
+		config.HTTPUsername = httpUsername
+		config.HTTPPassword = httpPassword
+	}
+
+	if certificateFingerPrint != constants.EmptyString {
+		config.CertificateFingerPrint = certificateFingerPrint
 	}
 
 	return []schema.Config{config}

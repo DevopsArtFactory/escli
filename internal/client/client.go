@@ -21,13 +21,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/elastic/go-elasticsearch"
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/opensearch-project/opensearch-go"
 
 	"github.com/DevopsArtFactory/escli/internal/schema"
 )
 
 type Client struct {
 	ESClient     *elasticsearch.Client
+	OSClient     *opensearch.Client
 	S3Client     *s3.S3
 	S3Downloader *s3manager.Downloader
 	Region       string
@@ -35,7 +37,8 @@ type Client struct {
 
 func NewClient(sess client.ConfigProvider, creds *credentials.Credentials, config *schema.Config) Client {
 	return Client{
-		ESClient:     GetESClientFn(config.ElasticSearchURL),
+		ESClient:     GetESClientFn(config.URL, config.HTTPUsername, config.HTTPPassword, config.CertificateFingerPrint),
+		OSClient:     GetOSClientFn(config.URL, config.HTTPUsername, config.HTTPPassword),
 		S3Client:     GetS3ClientFn(sess, creds),
 		S3Downloader: GetS3DownloaderClientFn(sess, creds),
 	}
